@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador Organización Institucional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: hoja de examen de una sola columna, barra fija con reloj de guardia y progreso; tarjetas por pregunta numeradas como un parte. */
+:root {
+  --bg: #e9eef3;
+  --surface: #ffffff;
+  --surface-2: #f4f7fa;
+  --ink: #0f1e2e;
+  --muted: #566577;
+  --line: #d2dae3;
+  --accent: #0b4f8a;
+  --accent-ink: #ffffff;
+  --signal: #c98a00;
+  --ok: #1d7a4b;
+  --ok-bg: #e3f3ea;
+  --bad: #b42318;
+  --bad-bg: #fbe7e5;
+  --part: #9a5b00;
+  --part-bg: #fbf0dc;
+  --focus: #2f7fd0;
+  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a1520; --surface: #112232; --surface-2: #0d1c2a; --ink: #e5edf5; --muted: #93a4b6;
+    --line: #22384d; --accent: #6db2f0; --accent-ink: #06121d; --signal: #f0b543;
+    --ok: #4cc38a; --ok-bg: #12332a; --bad: #f2786c; --bad-bg: #3a1a1a; --part: #e9a84a; --part-bg: #352712;
+    --focus: #8cc4f7; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a1520; --surface: #112232; --surface-2: #0d1c2a; --ink: #e5edf5; --muted: #93a4b6;
+  --line: #22384d; --accent: #6db2f0; --accent-ink: #06121d; --signal: #f0b543;
+  --ok: #4cc38a; --ok-bg: #12332a; --bad: #f2786c; --bad-bg: #3a1a1a; --part: #e9a84a; --part-bg: #352712;
+  --focus: #8cc4f7; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 0 64px; }
+
+/* Cabecera */
+.head { padding-block: 28px 18px; display: grid; gap: 10px; }
+.eyebrow {
+  font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px;
+}
+.eyebrow b { color: var(--accent); font-weight: 600; }
+h1 {
+  font-family: var(--f-display); font-weight: 700; font-size: clamp(34px, 7vw, 52px);
+  line-height: .95; margin: 0; letter-spacing: .01em; text-transform: uppercase; text-wrap: balance;
+}
+h1 span { color: var(--accent); }
+.rules { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+.rules li {
+  font-size: 13px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+}
+.rules li strong { color: var(--ink); font-weight: 600; }
+
+/* Barra fija */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.bar-in {
+  max-width: 860px; margin: 0 auto; padding: 10px 16px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.clock { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.clock-time {
+  font-family: var(--f-mono); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums;
+  letter-spacing: .02em; line-height: 1;
+}
+.clock-note { font-size: 12px; color: var(--muted); }
+.clock[data-state="warn"] .clock-time { color: var(--signal); }
+.clock[data-state="crit"] .clock-time { color: var(--bad); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .45; } }
+.prog { flex: 1 1 160px; min-width: 120px; display: grid; gap: 4px; }
+.prog-txt { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.prog-track { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.prog-fill { height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+.btns { display: flex; gap: 8px; }
+button {
+  font: 600 14px/1 var(--f-body); border-radius: 8px; padding: 10px 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.primary:hover { filter: brightness(1.08); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+button:disabled { opacity: .5; cursor: default; }
+
+/* Confirmación */
+.confirm {
+  margin-top: 16px; padding: 14px 16px; border: 1px solid var(--signal); border-radius: 10px;
+  background: var(--surface); display: grid; gap: 10px;
+}
+.confirm p { margin: 0; }
+
+/* Resultado */
+.result {
+  margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px; display: grid; gap: 16px;
+}
+.result-top { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: flex-end; }
+.grade { display: grid; gap: 2px; }
+.grade-label { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.grade-num {
+  font-family: var(--f-display); font-weight: 700; font-size: 72px; line-height: .9; font-variant-numeric: tabular-nums;
+}
+.grade-num small { font-size: 28px; color: var(--muted); font-weight: 600; }
+.verdict {
+  font-family: var(--f-display); font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .04em;
+  padding: 6px 12px; border-radius: 6px; align-self: center;
+}
+.verdict.ok { color: var(--ok); background: var(--ok-bg); }
+.verdict.bad { color: var(--bad); background: var(--bad-bg); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.stat { border-top: 2px solid var(--line); padding-top: 6px; }
+.stat b { display: block; font-family: var(--f-mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stat.ok { border-color: var(--ok); } .stat.bad { border-color: var(--bad); } .stat.part { border-color: var(--part); }
+.result-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.timeout { margin: 0; color: var(--bad); font-weight: 600; }
+
+/* Preguntas */
+.qs { display: grid; gap: 14px; margin-top: 18px; padding: 0; list-style: none; }
+.q {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px 18px;
+  display: grid; gap: 12px; min-width: 0;
+}
+.q-head { display: flex; gap: 12px; align-items: flex-start; }
+.q-num {
+  font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1; color: var(--accent);
+  min-width: 2ch; font-variant-numeric: tabular-nums;
+}
+.q-main { display: grid; gap: 6px; min-width: 0; flex: 1; }
+.q-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.q-topic { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.q-kind { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.q-text { margin: 0; font-weight: 600; font-size: 16px; line-height: 1.4; text-wrap: pretty; }
+.q-hint { margin: 0; font-size: 13px; color: var(--muted); }
+.opts { display: grid; gap: 6px; }
+.opt {
+  display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; min-width: 0;
+}
+.opt:hover { border-color: var(--accent); }
+.opt input { margin: 3px 0 0; accent-color: var(--accent); flex: none; }
+.opt span { min-width: 0; overflow-wrap: anywhere; }
+.opt:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.code { font-family: var(--f-mono); font-weight: 600; }
+
+.match { display: grid; gap: 8px; }
+.mrow {
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; align-items: center;
+  padding: 8px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line);
+}
+.mrow label { min-width: 0; overflow-wrap: anywhere; font-size: 14.5px; }
+select {
+  width: 100%; min-width: 0; font: 14px/1.3 var(--f-body); padding: 8px 10px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+@media (max-width: 560px) { .mrow { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Revisión */
+.q[data-res] { border-left-width: 4px; }
+.q[data-res="ok"] { border-left-color: var(--ok); }
+.q[data-res="bad"], .q[data-res="none"] { border-left-color: var(--bad); }
+.q[data-res="part"] { border-left-color: var(--part); }
+.badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-variant-numeric: tabular-nums; }
+.badge.ok { color: var(--ok); background: var(--ok-bg); }
+.badge.bad { color: var(--bad); background: var(--bad-bg); }
+.badge.part { color: var(--part); background: var(--part-bg); }
+.opt.is-right { border-color: var(--ok); background: var(--ok-bg); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-bg); }
+.opt .tag { margin-left: auto; font-size: 12px; font-weight: 600; flex: none; padding-left: 8px; }
+.opt.is-right .tag { color: var(--ok); } .opt.is-wrong .tag { color: var(--bad); }
+.mrow.is-right { border-color: var(--ok); background: var(--ok-bg); }
+.mrow.is-wrong { border-color: var(--bad); background: var(--bad-bg); }
+.fix { grid-column: 1 / -1; font-size: 13px; color: var(--ok); font-weight: 600; }
+.exp {
+  margin: 0; font-size: 14px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2);
+  border: 1px dashed var(--line); color: var(--ink);
+}
+.exp b { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+.qs.only-errors .q[data-res="ok"] { display: none; }
+.locked .opt, .locked select { cursor: default; }
+.foot { margin-top: 22px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.src { margin-top: 28px; font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) {
+  .clock[data-state="crit"] .clock-time { animation: none; }
+  .prog-fill { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div class="eyebrow"><span>Prefectura Naval Argentina</span><span>Unidades 1 y 2</span><b id="serial">Modelo Nº ----</b></div>
+    <h1>Organización <span>Institucional</span></h1>
+    <ul class="rules">
+      <li><strong>30</strong> preguntas al azar</li>
+      <li><strong>25:00</strong> min desde tu primera respuesta</li>
+      <li>Nota sobre <strong>10</strong> · aprobás con <strong>6</strong></li>
+      <li>Las listas puntúan por fila</li>
+    </ul>
+  </header>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="clock" id="clock" data-state="idle">
+      <span class="clock-time" id="clockTime">25:00</span>
+      <span class="clock-note" id="clockNote">arranca al responder</span>
+    </div>
+    <div class="prog">
+      <span class="prog-txt" id="progTxt">0 de 30 respondidas</span>
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+    <div class="btns">
+      <button type="button" id="btnNew">Nuevo examen</button>
+      <button type="button" class="primary" id="btnSubmit">Entregar</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="confirm" id="confirm" hidden>
+    <p id="confirmTxt"></p>
+    <div class="btns">
+      <button type="button" class="primary" id="btnConfirm">Entregar igual</button>
+      <button type="button" id="btnCancel">Seguir respondiendo</button>
+    </div>
+  </div>
+
+  <section class="result" id="result" hidden aria-live="polite"></section>
+
+  <form id="exam" autocomplete="off" onsubmit="return false">
+    <ol class="qs" id="qs"></ol>
+  </form>
+
+  <div class="foot">
+    <button type="button" id="btnNew2">Nuevo examen</button>
+    <button type="button" class="primary" id="btnSubmit2">Entregar examen</button>
+  </div>
+  <p class="src">Banco de preguntas armado con el resumen “Organización Institucional – Guía visual 2026” y la presentación “U1 ORI – PPZZ – Dependencias”. Cada vez que entrás (o tocás “Nuevo examen”) se sortean otras preguntas, otros ítems dentro de las listas y otro orden de opciones.</p>
+</main>
+
+<script>
+(function () {
+"use strict";
+
+/* ============ utilidades ============ */
+const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const one = (a) => a[Math.floor(Math.random() * a.length)];
+const uniq = (a) => Array.from(new Set(a));
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* mc: una correcta + distractores sacados de un pool */
+function mc(topic, text, answer, pool, exp, n) {
+  const d = pick(uniq(pool).filter((x) => x !== answer), (n || 4) - 1);
+  return { type: "mc", topic, text, answer, options: shuffle([answer, ...d]), exp };
+}
+function multi(topic, text, correct, wrong, exp) {
+  return { type: "multi", topic, text, correct, options: shuffle([...correct, ...wrong]), exp };
+}
+function match(topic, text, rows, choices, exp, keepOrder) {
+  return { type: "match", topic, text, rows, choices: keepOrder ? choices : shuffle(uniq(choices)), exp };
+}
+
+/* ============ datos de la materia ============ */
+const PN = "Dependencia directa del Prefecto Nacional Naval";
+const DG = {
+  "Dirección General de Seguridad": [
+    "Dirección de Planeamiento", "Dirección de Tráfico Marítimo, Fluvial y Lacustre",
+    "Dirección de Operaciones y Protección Ciudadana", "Dirección de Región Norte",
+    "Dirección de Región Centro", "Dirección de Región Sur"],
+  "Dirección General de Seguridad Marítima y Portuaria": [
+    "Dirección de Policía Judicial, Protección Marítima y Puertos",
+    "Dirección de Policía de Seguridad de la Navegación y Protección Ambiental"],
+  "Dirección General de Administración y Logística": [
+    "Dirección del Material", "Dirección de Informática y Comunicaciones", "Dirección de Administración Financiera"],
+  "Dirección General de Recursos Humanos y Desarrollo": [
+    "Dirección del Personal y Bienestar", "Dirección de Educación"]
+};
+const DG_NAMES = Object.keys(DG);
+const DG_TIT = {
+  "Dirección General de Seguridad": "Prefecto General Villarreal Carlos Alfredo",
+  "Dirección General de Seguridad Marítima y Portuaria": "Prefecto General Oviedo Roberto Ariel",
+  "Dirección General de Administración y Logística": "Prefecto General Pera Fabián Luis",
+  "Dirección General de Recursos Humanos y Desarrollo": "Prefecto General Moya Aníbal Eduardo"
+};
+const DIRECT = ["Asesoría Técnica Naval", "Asesoría Jurídica", "Dirección de Inspectoría General",
+  "Dirección de Inteligencia Criminal e Investigaciones", "Secretaría General"];
+const DIR_OF = {}; DG_NAMES.forEach((g) => DG[g].forEach((d) => (DIR_OF[d] = g)));
+DIRECT.forEach((d) => (DIR_OF[d] = PN));
+const ALL_DIRS = Object.keys(DIR_OF);
+
+const PZ = [
+  { s: "PZPP", n: "Paraná Superior y Paraguay", sede: "Corrientes", reg: "Norte" },
+  { s: "PZAU", n: "Alto Uruguay", sede: "Paso de los Libres", reg: "Norte" },
+  { s: "PZAP", n: "Alto Paraná", sede: "Posadas", reg: "Norte" },
+  { s: "PZBP", n: "Bajo Paraná", sede: "Rosario", reg: "Centro" },
+  { s: "PZRP", n: "Río de la Plata", sede: "Ciudad Autónoma de Buenos Aires", reg: "Centro" },
+  { s: "PZDE", n: "Delta", sede: "Tigre", reg: "Centro" },
+  { s: "PZBU", n: "Bajo Uruguay", sede: "Concepción del Uruguay", reg: "Centro" },
+  { s: "PZMS", n: "Mar Argentino Sur", sede: "Río Gallegos", reg: "Sur" },
+  { s: "PZLC", n: "Lacustre y del Comahue", sede: "Neuquén", reg: "Sur" },
+  { s: "PZMN", n: "Mar Argentino Norte", sede: "Bahía Blanca", reg: "Sur" }
+];
+const REG = { Norte: { sede: "Corrientes", c: "DNOR" }, Centro: { sede: "Rosario", c: "DCEN" }, Sur: { sede: "Viedma", c: "DSUR" } };
+const CITIES = uniq([...PZ.map((p) => p.sede), "Viedma", "Mar del Plata", "Ushuaia", "Paraná", "Santa Fe", "Comodoro Rivadavia", "Puerto Madryn", "Formosa"]);
+
+const NIV = [
+  { n: "Nivel I", den: "Prefectura", gr: "Prefecto Mayor (PM)", ej: "Prefectura Mar del Plata" },
+  { n: "Nivel II", den: "Prefectura", gr: "Prefecto Principal (PP)", ej: "Prefectura Tigre" },
+  { n: "Nivel III", den: "Subprefectura", gr: "Prefecto (PR)", ej: "Prefectura San Pedro" },
+  { n: "Nivel IV", den: "Destacamento Reforzado", gr: "Oficial Principal / Subprefecto (OP/SP)", ej: "Prefectura Santa Ana" },
+  { n: "Nivel V", den: "Destacamento", gr: "Suboficial Superior (SS.BB.)", ej: "Prefectura Puerto Pirámide" }
+];
+
+const SUP = ["Oficial Ayudante", "Oficial Auxiliar", "Oficial Principal", "Subprefecto", "Prefecto", "Prefecto Principal", "Prefecto Mayor", "Prefecto General"];
+const SUP_G = (i) => (i <= 3 ? "Oficiales Subalternos" : i <= 5 ? "Oficiales Jefes" : "Oficiales Superiores");
+const SUB = ["Marinero", "Cabo Segundo", "Cabo Primero", "Ayudante de Tercera", "Ayudante de Segunda", "Ayudante de Primera", "Ayudante Principal", "Ayudante Mayor"];
+const SUB_G = (i) => (i === 0 ? "Tropas" : i <= 2 ? "Cabos" : i <= 5 ? "Suboficiales Subalternos" : "Suboficiales Superiores");
+
+const ESC = [
+  { e: "Jurídico", c: "Verde", b: "JU", d: "Abogacía y ciencias jurídicas" },
+  { e: "Sanidad", c: "Rojo", b: "SA", d: "Medicina, enfermería y afines" },
+  { e: "Ingeniería", c: "Celeste", b: "IN", d: "Ingeniería y especialidades técnicas" },
+  { e: "Científico Tecnológico", c: "Bordó", b: "CT", d: "Ciencias exactas, naturales y tecnología" },
+  { e: "Técnica Naval", c: "Gris", b: "TN", d: "Especialidades técnicas navales" }
+];
+
+const QC = [
+  { c: "QRA", m: "Nombre del barco o estación", ex: "Mi ___ es EA7FOY" },
+  { c: "QRG", m: "Frecuencia", ex: "Su ___ es 10.368 MHz" },
+  { c: "QRK", m: "Inteligibilidad de la señal", ex: "Su transmisión es ___ (ininteligible)" },
+  { c: "QRL", m: "Frecuencia ocupada", ex: "Atento Estación … ___" },
+  { c: "QRM", m: "Interferencia artificial", ex: "Hay otro QSO 2 kHz abajo que me produce mucho ___" },
+  { c: "QRT", m: "Cese de la transmisión", ex: "___ por favor" },
+  { c: "QRV", m: "Listo para recibir", ex: "___ adelante" },
+  { c: "QRX", m: "Espere, lo llamaré nuevamente", ex: "Por favor ___ en 3 minutos" },
+  { c: "QRZ", m: "Identificación: ¿quién me llama?", ex: "Le llama … (en kHz o MHz)" },
+  { c: "QSB", m: "La señal se desvanece", ex: "Recibo su señal con ___" },
+  { c: "QSL", m: "Acuse de recibo", ex: "___ a su última transmisión" },
+  { c: "QSO", m: "Establecer comunicación con…", ex: "Por favor, haga ___ con la estación" },
+  { c: "QTH", m: "Posición geográfica o ubicación", ex: "Mi ___ es KM 235 Río Paraná, margen derecha" },
+  { c: "QTR", m: "Hora exacta", ex: "___ 2007 Local" },
+  { c: "QAP", m: "A la espera (permanecer a la escucha)", ex: "Equipo que llama manténgase ___" }
+];
+
+const SERV = [
+  { s: "DTRA", f: "Tráfico / VTS / MAS / SAR" },
+  { s: "SBGC", f: "Buques Guardacostas" },
+  { s: "SEAV", f: "Servicio de Aviación" },
+  { s: "SERS", f: "Salvamento / Incendio / Ambiente" },
+  { s: "AGAL", f: "Agrupación Albatros" },
+  { s: "AGGU", f: "Agrupación Guardacostas" }
+];
+
+const GDE = [
+  { m: "EU", n: "Escritorio Único", f: "Entrada y tareas del usuario (bandeja, pendientes, en trámite)" },
+  { m: "CCOO", n: "Comunicaciones Oficiales", f: "Enviar y recibir comunicaciones oficiales" },
+  { m: "GEDO", n: "Generador Electrónico de Documentos Oficiales", f: "Generar, importar y firmar documentos" },
+  { m: "EE", n: "Expediente Electrónico", f: "Caratular, vincular documentos y hacer pases" }
+];
+const FLOW = [
+  { s: "Caratular", m: "EE" }, { s: "Generar / importar el documento", m: "GEDO" }, { s: "Firmar el documento", m: "GEDO" },
+  { s: "Vincular el documento al expediente", m: "EE" }, { s: "Hacer el pase", m: "EE" }, { s: "Consultar / continuar el trámite", m: "EE" }
+];
+
+const DOCS = [
+  { d: "Parte", f: "Se dirige al superior inmediato e informa un suceso o acontecimiento." },
+  { d: "Informe", f: "Da a conocer una situación para que se pueda formar una decisión." },
+  { d: "Informativo", f: "Comunica información institucional con estructura periodística." },
+  { d: "Disposición", f: "Mandato escrito de una autoridad competente dentro de su jurisdicción." },
+  { d: "Memorando", f: "Comunicación interna de superior a subordinado; sirve como ayuda memoria." },
+  { d: "Acta", f: "Dos o más personas dejan constancia y fe de lo tratado o sucedido." },
+  { d: "M.O.I.", f: "Mensaje Oficial Interno para asuntos de importancia o urgencia institucional." },
+  { d: "Mensaje interno", f: "Orden o información transitoria, rápida y breve." }
+];
+
+const GLOS = [
+  { t: "Entender", d: "Ocuparse directamente de un asunto con responsabilidad primaria." },
+  { t: "Intervenir", d: "Tomar parte de un asunto e interponer su autoridad sin ser el responsable primario." },
+  { t: "Participar", d: "Tener parte en un asunto determinado." },
+  { t: "Administrar", d: "Perseguir el máximo rendimiento de un organismo para satisfacer el motivo de su creación." },
+  { t: "Asesorar", d: "Prestar consejo técnico de carácter específico, a requerimiento." },
+  { t: "Coordinar", d: "Disponer actividades con método, combinando los esfuerzos de más de un organismo o individuo." },
+  { t: "Organigrama", d: "Representación gráfica de una estructura orgánica que muestra las relaciones formales entre niveles jerárquicos." },
+  { t: "Subordinado", d: "Elemento orgánico respecto de otro de mayor nivel a cuyas órdenes opera, dentro de un mismo organismo." }
+];
+
+const ROLES = {
+  "Seguridad de la navegación": ["Dictado de ordenanzas", "Inspección de buques", "Practicaje / pilotaje", "Registro de buques y de su personal"],
+  "Jurisdicción administrativa": ["Sumarios por acaecimientos de la navegación", "Juzgamiento de faltas", "Determinación de responsabilidad administrativa"],
+  "Policía de seguridad": ["Mantenimiento del orden público", "Prevención de delitos", "Control migratorio auxiliar", "Auxilio en siniestros"],
+  "Policía judicial": ["Investigación de delitos", "Diligencias judiciales", "Detención de autores", "Cumplimiento de mandatos judiciales"]
+};
+
+/* Organigrama Prefecturas Nivel I y II */
+const PRF = {
+  "Directamente del Jefe": ["Sección Despacho", "Sección Jurídica", "Sección Administrativo Financiera", "Delegación de Inteligencia Criminal",
+    "Centro de Control de Tráfico y Seguridad de la Navegación", "Estación de Salvamento, Incendio y Protección Ambiental", "Prefecturas Nivel IV y V"],
+  "División Operaciones": ["Sección Protección Marítima", "Sección Guardia y Patrullaje", "Sección Policía de Seguridad Judicial y Sumarios",
+    "Sección Armería", "Sección Policía de Seguridad de la Navegación", "Sección Control de Buques por el Estado Rector del Puerto", "Sección Informática y Comunicaciones"],
+  "División Logística": ["Sección Personal", "Sección Material y Talleres", "Sección Sanidad"]
+};
+/* Organigrama Prefecturas de Zona */
+const PPZZ = {
+  "División Logística": ["Sección Personal", "Sección Material y Talleres", "Sección Sanidad", "Sección Armería", "Sección Abastecimiento"],
+  "División Operaciones": ["Sección Informática y Comunicaciones", "Sección Planes", "Sección Guardia", "Sección Policía Auxiliar Pesquera",
+    "Sección Protección Marítima", "Sección Registros Jurisdiccionales", "Sección Inspecciones Técnicas", "Sección Protección Ambiental"],
+  "División Administrativo Financiera": ["Sección Tesorería", "Subsección Rendiciones de Cuentas", "Subsección Contabilidad", "Subsección Control de Gestión"],
+  "División Secretaría": ["Sección Despacho y Archivo", "Sección Bienestar", "Sección Servicios Generales"],
+  "Jefe de Operaciones de Frontera": ["Operaciones Fluviales", "Operaciones Terrestres"]
+};
+
+const OG_TASKS = [
+  "Formular diariamente, a la hora fijada, el parte diario del personal (licencias, partes médicos, guardias)",
+  "Fiscalizar el acceso a la dependencia de toda persona ajena a la misma",
+  "Fiscalizar la salida del personal subalterno, que no puede retirarse sin su autorización",
+  "Realizar los embarcos y desembarcos de tripulantes que se produzcan en la jurisdicción",
+  "Iniciar el sumario por contravención en ausencia del personal de Sumarios",
+  "Controlar el consumo de combustible de embarcaciones y vehículos",
+  "Fiscalizar la asistencia del personal a las academias y ejercicios",
+  "Entender en la atención de toda persona que concurra a la dependencia, indicándole los trámites a seguir"
+];
+const AG_TASKS = [
+  "Informar al Oficial de Guardia toda novedad producida durante su servicio",
+  "Informar al Oficial de Guardia de toda persona que concurra a la dependencia",
+  "Contribuir al control de la salida del personal subalterno",
+  "Intervenir en los zafarranchos de incendio y ataques",
+  "Controlar que se cumplan las tareas asignadas, en especial las del Cabo de Guardia"
+];
+
+const PHON = { A: "Alfa", B: "Bravo", C: "Charlie", D: "Delta", E: "Echo", F: "Foxtrot", G: "Golf", H: "Hotel", I: "India", J: "Juliett", K: "Kilo", L: "Lima", M: "Mike", N: "November", O: "Oscar", P: "Papa", Q: "Quebec", R: "Romeo", S: "Sierra", T: "Tango", U: "Uniform", V: "Victor", W: "Whiskey", X: "X-Ray", Y: "Yankee", Z: "Zulu" };
+const PHON_BAD = { A: ["Ancla", "Amor"], B: ["Barco", "Beta"], C: ["Carlos", "Casa"], D: ["Dama", "Dorado"], E: ["Eco", "Eva"], F: ["Francia", "Faro"], G: ["Gato", "Gol"], H: ["Hielo", "Hola"], I: ["Italia", "Isla"], J: ["Julia", "Jaguar"], K: ["Kiwi", "Koala"], L: ["Luna", "Lisboa"], M: ["Mario", "Mar"], N: ["Norte", "Nancy"], O: ["Oslo", "Oso"], P: ["Pedro", "París"], Q: ["Queso", "Quito"], R: ["Roma", "Radio"], S: ["Santiago", "Sol"], T: ["Toro", "Tomate"], U: ["Uruguay", "Uno"], V: ["Vaca", "Venus"], W: ["Wilson", "Washington"], X: ["Xilofón", "Xenón"], Y: ["Yate", "Yoyo"], Z: ["Zebra", "Zapato"] };
+const CUATRI = ["PZAP", "DTRA", "MPLA", "ROSA", "DIOP", "PZBU", "PZMS", "SBGC", "SEAV", "AGAL", "USHU", "OLIV", "PZLC", "DSUR", "AGGU", "SERS"];
+
+/* ============ banco de V/F ============ */
+const TF_ORG = [
+  ["La Región Centro es la que más Prefecturas de Zona agrupa (4).", true],
+  ["La Dirección de Región Sur tiene su sede en Viedma.", true],
+  ["La Dirección de Región Norte tiene su sede en Posadas.", false],
+  ["La PZBU tiene su sede en Concepción del Uruguay.", true],
+  ["La PZAU tiene su sede en Posadas.", false],
+  ["La PZLC (Lacustre y del Comahue) tiene su sede en Neuquén.", true],
+  ["La PZMN depende de la Dirección de Región Centro.", false],
+  ["La PZDE (Delta) tiene su sede en Tigre.", true],
+  ["La Dirección de Región Norte depende de la Dirección General de Seguridad.", true],
+  ["La Dirección de Educación depende de la Dirección General de Administración y Logística.", false],
+  ["La Dirección de Inteligencia Criminal e Investigaciones depende directamente del Prefecto Nacional Naval.", true],
+  ["La Secretaría General depende de la Subprefectura Nacional Naval.", false],
+  ["La Dirección de Informática y Comunicaciones depende de la DG de Administración y Logística.", true],
+  ["La Dirección de Tráfico Marítimo, Fluvial y Lacustre depende de la DG de Seguridad Marítima y Portuaria.", false],
+  ["“Prefecto Nacional Naval” es un cargo; “Prefecto General” es un grado.", true],
+  ["El Subprefecto Nacional Naval secunda al Prefecto Nacional y lo reemplaza conforme al régimen aplicable.", true],
+  ["Una Prefectura Nivel III se denomina Subprefectura y su titular es un Prefecto (PR).", true],
+  ["Una Prefectura Nivel IV se denomina Destacamento y su titular es un Suboficial Superior.", false],
+  ["Las Prefecturas de Nivel I y II tienen como equivalencia de jefatura el mismo grado.", false],
+  ["La PNA es una Fuerza de Seguridad Federal con dependencia orgánica del Ministerio de Seguridad Nacional.", true],
+  ["La Ley 18.398 es la Ley General de la Prefectura Naval Argentina.", true],
+  ["En el organigrama de las PPZZ, la Sección Armería integra la División Logística.", true],
+  ["En el organigrama de las PPZZ, el Jefe de Operaciones de Frontera tiene a su cargo Operaciones Fluviales y Operaciones Terrestres.", true],
+  ["En las Prefecturas Nivel I y II, la Sección Sanidad integra la División Operaciones.", false]
+];
+const TF_PERS = [
+  ["El Subprefecto es el grado más alto de los Oficiales Subalternos.", true],
+  ["El Prefecto Principal integra el agrupamiento de Oficiales Superiores.", false],
+  ["El Cuerpo Auxiliar (CX) forma parte del Personal Superior.", false],
+  ["El Cuerpo Profesional exige título universitario e ingreso entre 18 y 35 años.", true],
+  ["El escalafón Sanidad se identifica en la jineta con el color rojo.", true],
+  ["El escalafón Ingeniería se identifica con el color gris.", false],
+  ["El Ayudante de Guardia es el suboficial más antiguo del trozo de guardia.", true],
+  ["El Oficial de Guardia depende directamente del Prefecto de la dependencia, no del Jefe de Servicios.", false],
+  ["En dependencias de escasa dotación, el Oficial de Guardia tiene agregadas las funciones del Oficial de Ribera.", true],
+  ["Un mismo oficio puede tratar asuntos de distinta naturaleza.", false],
+  ["La hora oficial se escribe con cuatro cifras, por ejemplo 0815.", true],
+  ["En la correspondencia se escribe primero el apellido y luego los nombres.", false],
+  ["La firma compromete la forma y el contenido del documento.", true],
+  ["El plazo de trámite “Urgente” es de máximo 5 días hábiles.", false],
+  ["El memorando es una comunicación interna del subordinado al superior.", false],
+  ["El parte se dirige al superior inmediato.", true],
+  ["Para dirigirse al superior se usan fórmulas como “informo”, “elevo” y “solicito”.", true],
+  ["“Requiero” es una fórmula de redacción propia de un escrito dirigido al superior.", false],
+  ["En GDE, un documento en papel se digitaliza o importa mediante GEDO antes de vincularlo al expediente.", true],
+  ["En GDE, el módulo CCOO se usa para caratular expedientes.", false],
+  ["El Código Q “QTH” se refiere a la posición o ubicación.", true],
+  ["El Código Q “QSL” significa interferencia artificial.", false],
+  ["En el código fonético internacional, la letra J se dice “Juliett”.", true],
+  ["El CAPNA es el Catálogo de Códigos Administrativos de la PNA.", true]
+];
+
+/* ============ generadores ============ */
+const G_MATCH = [
+  // 1 Direcciones -> DG
+  () => {
+    const items = pick(ALL_DIRS.filter((d) => DIR_OF[d] !== PN), 5).concat(pick(DIRECT, 1));
+    return match("Orgánica PNA", "Seleccioná de qué Dirección General (o autoridad) depende cada una de estas direcciones.",
+      shuffle(items).map((d) => ({ label: d, answer: DIR_OF[d] })), [...DG_NAMES, PN],
+      "Organigrama 2026: DG de Seguridad (Planeamiento, Tráfico, Operaciones y Protección Ciudadana, Regiones Norte/Centro/Sur); DG de Seguridad Marítima y Portuaria (Policía Judicial, Protección Marítima y Puertos; Policía de Seguridad de la Navegación y Protección Ambiental); DG de Administración y Logística (Material, Informática y Comunicaciones, Administración Financiera); DG de RR.HH. y Desarrollo (Personal y Bienestar, Educación). Asesoría Técnica Naval, Asesoría Jurídica, Inspectoría General, Inteligencia Criminal e Investigaciones y Secretaría General dependen directo del Prefecto Nacional.");
+  },
+  // 2 PZ -> Región
+  () => match("Regiones y PPZZ", "Indicá a qué Dirección de Región pertenece cada Prefectura de Zona.",
+    pick(PZ, 6).map((p) => ({ label: `${p.s} – ${p.n}`, answer: "Región " + p.reg })), ["Región Norte", "Región Centro", "Región Sur"],
+    "Norte (3): PZPP, PZAU, PZAP. Centro (4): PZBP, PZRP, PZDE, PZBU. Sur (3): PZMS, PZLC, PZMN. Fórmula 3 + 4 + 3 = 10."),
+  // 3 PZ -> sede
+  () => match("Regiones y PPZZ", "Completá la ciudad sede de cada Prefectura de Zona.",
+    pick(PZ, 5).map((p) => ({ label: `${p.s} – ${p.n}`, answer: p.sede })), PZ.map((p) => p.sede).concat(["Viedma", "Mar del Plata"]),
+    "Sedes: PZPP Corrientes, PZAU Paso de los Libres, PZAP Posadas, PZBP Rosario, PZRP CABA, PZDE Tigre, PZBU Concepción del Uruguay, PZMS Río Gallegos, PZLC Neuquén, PZMN Bahía Blanca."),
+  // 4 sigla -> nombre
+  () => match("Regiones y PPZZ", "Relacioná cada cuatrigrama de Prefectura de Zona con su denominación.",
+    pick(PZ, 5).map((p) => ({ label: p.s, mono: true, answer: p.n })), PZ.map((p) => p.n),
+    "PZPP Paraná Superior y Paraguay · PZAU Alto Uruguay · PZAP Alto Paraná · PZBP Bajo Paraná · PZRP Río de la Plata · PZDE Delta · PZBU Bajo Uruguay · PZMS Mar Argentino Sur · PZLC Lacustre y del Comahue · PZMN Mar Argentino Norte."),
+  // 5 Región -> sede y cuatrigrama
+  () => {
+    const rows = [];
+    Object.keys(REG).forEach((r) => rows.push({ label: `Sede de la Dirección de Región ${r}`, answer: REG[r].sede }));
+    return match("Regiones y PPZZ", "Seleccioná la ciudad sede de cada Dirección de Región.", shuffle(rows),
+      ["Corrientes", "Rosario", "Viedma", "Posadas", "Bahía Blanca", "Ciudad Autónoma de Buenos Aires", "Río Gallegos"],
+      "Región Norte (DNOR): Corrientes. Región Centro (DCEN): Rosario. Región Sur (DSUR): Viedma.");
+  },
+  // 6 Nivel -> denominación
+  () => match("Niveles de Prefecturas", "Según la Disposición PLAE, SR.9 Nº 13 “C”/2005, completá la denominación de cada nivel.",
+    NIV.map((x) => ({ label: x.n, answer: x.den })), ["Prefectura", "Subprefectura", "Destacamento Reforzado", "Destacamento", "Puesto de Control"],
+    "Nivel I y II: Prefectura. Nivel III: Subprefectura. Nivel IV: Destacamento Reforzado. Nivel V: Destacamento.", false),
+  // 7 Nivel -> grado del titular
+  () => match("Niveles de Prefecturas", "Indicá la equivalencia de grado del titular (jefatura) para cada nivel de dependencia.",
+    shuffle(NIV).map((x) => ({ label: x.n, answer: x.gr })), NIV.map((x) => x.gr),
+    "I: Prefecto Mayor (PM) · II: Prefecto Principal (PP) · III: Prefecto (PR) · IV: Oficial Principal / Subprefecto (OP/SP) · V: Suboficial Superior (SS.BB.)."),
+  // 8 ejemplo -> nivel
+  () => match("Niveles de Prefecturas", "Ubicá cada dependencia en su nivel según el material de la materia.",
+    shuffle(NIV).map((x) => ({ label: x.ej, answer: x.n })), NIV.map((x) => x.n),
+    "Ejemplos: Mar del Plata Nivel I · Tigre Nivel II · San Pedro Nivel III · Santa Ana Nivel IV · Puerto Pirámide Nivel V.", true),
+  // 9 grado superior -> agrupamiento
+  () => match("Escala jerárquica", "Clasificá cada grado del Personal Superior según su agrupamiento.",
+    pick(SUP.map((g, i) => ({ label: g, answer: SUP_G(i) })), 6), ["Oficiales Subalternos", "Oficiales Jefes", "Oficiales Superiores"],
+    "Oficiales Subalternos: Oficial Ayudante, Oficial Auxiliar, Oficial Principal, Subprefecto. Oficiales Jefes: Prefecto, Prefecto Principal. Oficiales Superiores: Prefecto Mayor, Prefecto General.", true),
+  // 10 grado subalterno -> agrupamiento
+  () => match("Escala jerárquica", "Clasificá cada grado del Personal Subalterno (Ley 18.398, art. 31) según su agrupamiento.",
+    pick(SUB.map((g, i) => ({ label: g, answer: SUB_G(i) })), 6), ["Tropas", "Cabos", "Suboficiales Subalternos", "Suboficiales Superiores"],
+    "Tropas: Marinero. Cabos: Cabo Segundo, Cabo Primero. Suboficiales Subalternos: Ayudante de Tercera, de Segunda y de Primera. Suboficiales Superiores: Ayudante Principal y Ayudante Mayor.", true),
+  // 11 escalafón -> color
+  () => match("Cuerpo Profesional", "Indicá el color que identifica en la jineta a cada escalafón del Cuerpo Profesional.",
+    shuffle(ESC).map((e) => ({ label: "Escalafón " + e.e, answer: e.c })), ESC.map((e) => e.c).concat(["Azul", "Amarillo"]),
+    "Jurídico verde · Sanidad rojo · Ingeniería celeste · Científico Tecnológico bordó · Técnica Naval gris. El color va en el espacio entre las tiras."),
+  // 12 Código Q -> significado
+  () => match("Código Q", "Relacioná cada código Q con su significado.",
+    pick(QC, 5).map((q) => ({ label: q.c, mono: true, answer: q.m })), QC.map((q) => q.m),
+    "QRA nombre de estación · QRG frecuencia · QRK inteligibilidad · QRL frecuencia ocupada · QRM interferencia · QRT cese · QRV listo para recibir · QRX espere · QRZ quién me llama · QSB desvanecimiento · QSL acuse de recibo · QSO establecer comunicación · QTH ubicación · QTR hora exacta · QAP a la espera."),
+  // 13 Código Q completar frase
+  () => {
+    const set = pick(QC.filter((q) => q.ex.includes("___")), 4);
+    return match("Código Q", "Completá cada frase de radio con el código Q que corresponde.",
+      set.map((q) => ({ label: "“" + q.ex + "”", answer: q.c })), set.map((q) => q.c).concat(pick(QC.map((q) => q.c), 3)),
+      set.map((q) => `${q.c}: ${q.m}`).join(" · ") + ".");
+  },
+  // 14 servicios
+  () => match("Servicios y agrupaciones", "Relacioná cada cuatrigrama con el servicio o agrupación que identifica.",
+    pick(SERV, 5).map((s) => ({ label: s.s, mono: true, answer: s.f })), SERV.map((s) => s.f),
+    "DTRA Tráfico/VTS/MAS/SAR · SBGC Buques Guardacostas · SEAV Servicio de Aviación · SERS Salvamento/Incendio/Ambiente · AGAL Agrupación Albatros · AGGU Agrupación Guardacostas."),
+  // 15 GDE módulos
+  () => match("GDE", "Relacioná cada módulo de GDE con su función principal.",
+    shuffle(GDE).map((g) => ({ label: `${g.m} – ${g.n}`, answer: g.f })), GDE.map((g) => g.f),
+    "EU: entrada y tareas · CCOO: comunicaciones oficiales · GEDO: generar/importar/firmar documentos · EE: caratular, vincular y hacer pase."),
+  // 16 GDE orden
+  () => {
+    const pos = FLOW.map((_, i) => `Paso ${i + 1}`);
+    return match("GDE", "Ordená el flujo de tramitación de un Expediente Electrónico (Paso 1 = primero).",
+      shuffle(FLOW.map((f, i) => ({ label: `${f.s} (${f.m})`, answer: pos[i] }))), pos,
+      "1 Caratular (EE) → 2 Generar/importar (GEDO) → 3 Firmar (GEDO) → 4 Vincular (EE) → 5 Hacer pase (EE) → 6 Consultar/continuar (EE).", true);
+  },
+  // 17 documentos
+  () => {
+    const set = pick(DOCS, 5);
+    return match("Documentos administrativos", "Identificá qué tipo de documento corresponde a cada finalidad.",
+      set.map((d) => ({ label: d.f, answer: d.d })), DOCS.map((d) => d.d),
+      DOCS.map((d) => `${d.d}: ${d.f}`).join(" "));
+  },
+  // 18 plazos
+  () => match("Reglamento de Correspondencia", "Completá el plazo de trámite de cada categoría.",
+    [{ label: "Muy urgente", answer: "Inmediato / 24 h hábiles" }, { label: "Urgente", answer: "Máximo 72 h" }, { label: "Normal", answer: "Máximo 5 días hábiles" }],
+    ["Inmediato / 24 h hábiles", "Máximo 72 h", "Máximo 5 días hábiles", "Máximo 48 h", "Máximo 10 días hábiles"],
+    "Muy urgente: inmediato o 24 h hábiles. Urgente: máximo 72 h. Normal: máximo 5 días hábiles."),
+  // 19 glosario
+  () => {
+    const set = pick(GLOS, 4);
+    return match("Glosario", "Relacioná cada definición con el término del glosario institucional.",
+      set.map((g) => ({ label: g.d, answer: g.t })), GLOS.map((g) => g.t),
+      set.map((g) => `${g.t}: ${g.d}`).join(" "));
+  },
+  // 20 PPZZ secciones -> división
+  () => {
+    const all = []; Object.keys(PPZZ).forEach((k) => PPZZ[k].forEach((s) => all.push({ label: s, answer: k })));
+    let set = pick(all, 6);
+    return match("Orgánica PPZZ", "En el organigrama de las Prefecturas de Zona, indicá de qué división o jefatura depende cada sección.",
+      set, Object.keys(PPZZ),
+      "Logística: Personal, Material y Talleres, Sanidad, Armería, Abastecimiento. Operaciones: Informática y Comunicaciones, Planes, Guardia, Policía Auxiliar Pesquera, Protección Marítima, Registros Jurisdiccionales, Inspecciones Técnicas, Protección Ambiental. Adm. Financiera: Tesorería y subsecciones Rendiciones de Cuentas, Contabilidad, Control de Gestión. Secretaría: Despacho y Archivo, Bienestar, Servicios Generales. Jefe de Operaciones de Frontera: Operaciones Fluviales y Terrestres.");
+  },
+  // 21 Prefectura nivel I/II
+  () => {
+    const all = []; Object.keys(PRF).forEach((k) => PRF[k].forEach((s) => all.push({ label: s, answer: k })));
+    return match("Orgánica Prefecturas", "Organigrama de Prefecturas Nivel I y II: indicá de quién depende cada elemento.",
+      pick(all, 6), Object.keys(PRF),
+      "Del Jefe dependen: Sección Despacho, Sección Jurídica, Sección Administrativo Financiera, Delegación de Inteligencia Criminal, Centro de Control de Tráfico, Estación de Salvamento y las Prefecturas Nivel IV y V. División Operaciones: Protección Marítima, Guardia y Patrullaje, Policía de Seguridad Judicial y Sumarios, Armería, Policía de Seguridad de la Navegación, Control de Buques por el Estado Rector del Puerto, Informática y Comunicaciones. División Logística: Personal, Material y Talleres, Sanidad.");
+  },
+  // 22 funciones por rol
+  () => {
+    const all = []; Object.keys(ROLES).forEach((k) => ROLES[k].forEach((s) => all.push({ label: s, answer: k })));
+    return match("Ley 18.398 – Funciones", "Agrupá cada función de la PNA según el rol al que pertenece.",
+      pick(all, 6), Object.keys(ROLES),
+      "Seguridad de la navegación: ordenanzas, inspección de buques, practicaje/pilotaje, registro de buques y personal. Jurisdicción administrativa: sumarios por acaecimientos, juzgamiento de faltas, responsabilidad administrativa. Policía de seguridad: orden público, prevención de delitos, control migratorio auxiliar, auxilio en siniestros. Policía judicial: delitos, diligencias, detención de autores, mandatos judiciales.");
+  },
+  // 23 ordenar grados
+  () => {
+    const sc = Math.random() < 0.5 ? SUP : SUB;
+    const idx = pick(sc.map((_, i) => i), 5).sort((a, b) => a - b);
+    const pos = ["1º (menor)", "2º", "3º", "4º", "5º (mayor)"];
+    return match("Escala jerárquica", `Ordená estos grados del ${sc === SUP ? "Personal Superior" : "Personal Subalterno"} de menor a mayor jerarquía.`,
+      shuffle(idx.map((g, k) => ({ label: sc[g], answer: pos[k] }))), pos,
+      "Escala completa: " + sc.join(" → ") + ".", true);
+  },
+  // 24 roles guardia
+  () => match("Guardia en dependencias", "Relacioná cada integrante de la guardia con su rol.",
+    shuffle([
+      { label: "Jefe de Servicios", answer: "Organiza y supervisa el servicio" },
+      { label: "Oficial de Guardia", answer: "Responsable directo de la guardia interna" },
+      { label: "Ayudante de Guardia", answer: "Suboficial más antiguo del trozo de guardia" },
+      { label: "Cabo / personal de guardia", answer: "Cumple puestos y consignas" }]),
+    ["Organiza y supervisa el servicio", "Responsable directo de la guardia interna", "Suboficial más antiguo del trozo de guardia", "Cumple puestos y consignas", "Asienta los sumarios judiciales"],
+    "Cadena: Jefe de Servicios → Oficial de Guardia (depende del Jefe de Servicios) → Ayudante de Guardia (depende del Oficial de Guardia) → Cabo/personal."),
+  // 25 bigramas
+  () => {
+    const items = shuffle([
+      { label: "OP", answer: "Grado" }, { label: "SP", answer: "Grado" }, { label: "PR", answer: "Grado" }, { label: "PP", answer: "Grado" },
+      { label: "CG", answer: "Cuerpo" }, { label: "CP", answer: "Cuerpo" }, { label: "CC", answer: "Cuerpo" },
+      { label: "SA", answer: "Escalafón" }, { label: "CT", answer: "Escalafón" }, { label: "JU", answer: "Escalafón" }, { label: "IN", answer: "Escalafón" }, { label: "TN", answer: "Escalafón" }
+    ]).slice(0, 6).map((r) => ({ ...r, mono: true }));
+    return match("CAPNA y bigramas", "Indicá qué categoría identifica cada bigrama.", items, ["Grado", "Cuerpo", "Escalafón", "Destino"],
+      "Grado: OP / SP / PR / PP… · Cuerpo: CG / CP / CC · Escalafón: SA / CT / JU / IN / TN. Los destinos se identifican con cuatrigramas, no con bigramas.", true);
+  },
+  // 26 dónde buscar
+  () => match("Fuentes normativas", "¿Dónde buscás cada información?",
+    shuffle([
+      { label: "Cómo se organiza la PNA (naturaleza, funciones, jurisdicción)", answer: "Ley 18.398" },
+      { label: "Códigos administrativos de destinos, grados y cuerpos", answer: "CAPNA (Intranet)" },
+      { label: "Tareas generales del servicio", answer: "Reglamento General del Servicio" },
+      { label: "Tareas particulares de una Dirección, PZ o Prefectura", answer: "Reglamento Especial" }]),
+    ["Ley 18.398", "CAPNA (Intranet)", "Reglamento General del Servicio", "Reglamento Especial", "Ley 20.094"],
+    "Organización: Ley 18.398. Códigos: CAPNA en Intranet. Tareas: Reglamento General del Servicio. Tareas particulares: Reglamento Especial (Direcciones / PP.ZZ. / Prefecturas)."),
+  // 27 ámbito
+  () => match("Ámbito y jurisdicción", "Completá el alcance de cada espacio de actuación (art. 4).",
+    shuffle([
+      { label: "Zona fluvial (margen)", answer: "Hasta 35 m desde la margen" },
+      { label: "Costa marítima", answer: "Franja de 50 m desde la costa" },
+      { label: "Mar territorial", answer: "12 millas" },
+      { label: "Zona económica exclusiva", answer: "200 millas" }]),
+    ["Hasta 35 m desde la margen", "Franja de 50 m desde la costa", "12 millas", "200 millas", "24 millas", "Hasta 100 m desde la margen"],
+    "Margen fluvial: 35 m. Costa marítima: 50 m. Mar territorial: 12 millas. ZEE: 200 millas. La plataforma continental se fija por resolución de la ONU."),
+  // 28 palabras clave
+  () => {
+    const all = [["Informo", "Al superior"], ["Elevo", "Al superior"], ["Solicito", "Al superior"], ["Comunico", "Al subordinado"], ["Remito", "Al subordinado"], ["Requiero", "Al subordinado"]];
+    return match("Redacción", "Según las palabras clave de redacción, indicá a quién se dirige cada fórmula.",
+      pick(all, 5).map((x) => ({ label: "“" + x[0] + "”", answer: x[1] })), ["Al superior", "Al subordinado"],
+      "Al superior: informo / elevo / solicito. Al subordinado: comunico / remito / requiero.", true);
+  },
+  // 29 cuerpos
+  () => match("Agrupamiento del personal", "Ley 18.398, art. 20: ¿en qué agrupamiento existe cada cuerpo?",
+    shuffle([
+      { label: "Cuerpo General (CG)", answer: "En ambos" },
+      { label: "Cuerpo Profesional (CP)", answer: "Solo Personal Superior" },
+      { label: "Cuerpo Auxiliar (CX)", answer: "Solo Personal Subalterno" },
+      { label: "Cuerpo Complementario (CC)", answer: "En ambos" }]),
+    ["Solo Personal Superior", "Solo Personal Subalterno", "En ambos"],
+    "Personal Superior: General, Profesional y Complementario. Personal Subalterno: General, Auxiliar y Complementario.", true),
+  // 30 V/F orgánica
+  () => match("Verdadero o falso", "Marcá si cada afirmación sobre la orgánica es verdadera o falsa.",
+    pick(TF_ORG, 5).map((t) => ({ label: t[0], answer: t[1] ? "Verdadero" : "Falso" })), ["Verdadero", "Falso"],
+    "Revisá cada afirmación falsa contra el organigrama 2026 y el mapa de Regiones y PPZZ.", true),
+  // 31 V/F personal y administración
+  () => match("Verdadero o falso", "Marcá si cada afirmación sobre personal, guardia y prácticas administrativas es verdadera o falsa.",
+    pick(TF_PERS, 5).map((t) => ({ label: t[0], answer: t[1] ? "Verdadero" : "Falso" })), ["Verdadero", "Falso"],
+    "Repasá escala jerárquica, guardia, Reglamento de Correspondencia, GDE y Código Q.", true),
+  // 32 Grado / cargo / destino
+  () => {
+    const ex = one([
+      ["Prefecto Principal", "Jefe de Prefectura", "Prefectura Mar del Plata"],
+      ["Oficial Principal", "Oficial de Guardia", "Prefectura Tigre"],
+      ["Prefecto General", "Prefecto Nacional Naval", "Prefectura Nacional Naval"],
+      ["Ayudante Mayor", "Jefe de Servicios", "Prefectura Puerto Pirámide"],
+      ["Prefecto Mayor", "Prefecto de Zona", "Prefectura de Zona Bajo Paraná"]
+    ]);
+    return match("Grado, cargo y destino", "Clasificá cada dato del legajo de un efectivo como grado, cargo o destino.",
+      shuffle([{ label: ex[0], answer: "Grado" }, { label: ex[1], answer: "Cargo" }, { label: ex[2], answer: "Destino" }]),
+      ["Grado", "Cargo", "Destino"],
+      "Grado: jerarquía personal dentro de la escala. Cargo: función del servicio que se desempeña en el destino. Destino: organismo o dependencia donde presta servicios.", true);
+  }
+];
+
+const G_OTHER = [
+  () => mc("Ley 18.398", "¿Qué ley organiza y define las competencias de la Prefectura Naval Argentina?", "Ley 18.398",
+    ["Ley 20.094", "Ley 19.101", "Ley 24.059", "Ley 26.102", "Ley 18.711"], "La Ley General de la PNA es la 18.398. La 20.094 es la Ley de la Navegación."),
+  () => mc("Naturaleza y dependencia", "¿Cuál es la naturaleza y dependencia orgánica de la PNA según el material?",
+    "Fuerza de Seguridad Federal, con dependencia orgánica del Ministerio de Seguridad Nacional",
+    ["Fuerza Armada, con dependencia orgánica del Ministerio de Defensa", "Fuerza de Seguridad Federal, con dependencia orgánica del Ministerio de Defensa",
+      "Organismo descentralizado del Ministerio de Transporte", "Policía auxiliar dependiente de la Armada Argentina"],
+    "PNA = Seguridad Federal + Autoridad Marítima + Policía especializada. Depende del Ministerio de Seguridad Nacional."),
+  () => mc("Ley 18.398", "¿Qué fórmula resume la “idea central para el examen” sobre la PNA?", "Seguridad Federal + Autoridad Marítima + Policía especializada",
+    ["Fuerza Armada + Autoridad Portuaria + Policía de Fronteras", "Seguridad Federal + Autoridad Portuaria + Policía judicial exclusiva", "Defensa Nacional + Autoridad Marítima + Guardia Costera"],
+    "La PNA es autoridad especializada en seguridad de la navegación, protección ambiental, policía portuaria y funciones administrativas/judiciales de su competencia."),
+  () => {
+    const f = one([["Juzgamiento de faltas", "Jurisdicción administrativa"], ["Control migratorio auxiliar", "Policía de seguridad"], ["Practicaje / pilotaje", "Seguridad de la navegación"],
+      ["Detención de autores de delitos", "Policía judicial"], ["Sumarios por acaecimientos de la navegación", "Jurisdicción administrativa"], ["Registro de buques y personal", "Seguridad de la navegación"], ["Cumplimiento de mandatos judiciales", "Policía judicial"]]);
+    return mc("Ley 18.398 – Funciones", `La función “${f[0]}” se agrupa dentro del rol de:`, f[1], Object.keys(ROLES),
+      "Roles: Seguridad de la navegación · Jurisdicción administrativa · Policía de seguridad · Policía judicial.");
+  },
+  () => mc("Ámbito y jurisdicción", "Según el art. 4, ¿hasta dónde se extiende la zona de actuación sobre la margen fluvial?", "Hasta 35 m desde la margen",
+    ["Hasta 50 m desde la margen", "Hasta 12 millas desde la margen", "Hasta 100 m desde la margen", "Hasta 20 m desde la margen"], "Margen fluvial: 35 m. Costa marítima: 50 m."),
+  () => mc("Ámbito y jurisdicción", "¿Cómo se establece el límite de la plataforma continental según el material?", "Por resolución de la ONU",
+    ["Fijo en 200 millas por ley nacional", "Por disposición del Prefecto Nacional Naval", "Por convenio con la Armada Argentina", "Fijo en 12 millas"],
+    "Mar territorial 12 millas, ZEE 200 millas y plataforma continental según resolución ONU."),
+  () => mc("Autoridades", "¿Quién ejerce la conducción superior de la Institución y quién lo secunda?",
+    "El Prefecto Nacional Naval; lo secunda el Subprefecto Nacional Naval",
+    ["El Ministro de Seguridad Nacional; lo secunda el Prefecto Nacional Naval", "El Prefecto Nacional Naval; lo secunda el Director General de Seguridad",
+      "El Subprefecto Nacional Naval; lo secunda el Secretario General", "El Inspector General; lo secunda la Asesoría Jurídica"],
+    "El Prefecto Nacional Naval ejerce la conducción superior; el Subprefecto Nacional Naval lo secunda y lo reemplaza conforme al régimen aplicable."),
+  () => mc("Autoridades", "Según el organigrama 2026, ¿quién es el Prefecto Nacional Naval?", "Prefecto General Giménez Pérez Guillermo José",
+    ["Prefecto General Annichini Alejandro Paulo", "Prefecto General Villarreal Carlos Alfredo", "Prefecto General Pera Fabián Luis", "Prefecto General Di Giorgio Marcelo Adrián"],
+    "Prefecto Nacional: PG Giménez Pérez Guillermo José. Subprefecto Nacional: PG Annichini Alejandro Paulo."),
+  () => {
+    const g = one(DG_NAMES);
+    return mc("Orgánica PNA", `Según el organigrama 2026, ¿quién está a cargo de la ${g}?`, DG_TIT[g], Object.values(DG_TIT).concat(["Prefecto General Annichini Alejandro Paulo"]),
+      DG_NAMES.map((x) => `${x}: ${DG_TIT[x]}`).join(" · ") + ".");
+  },
+  () => mc("Grado y cargo", "¿Cuál de estas afirmaciones es correcta?", "“Prefecto General” es un grado y “Prefecto Nacional Naval” es un cargo",
+    ["“Prefecto Nacional Naval” es el grado más alto de la escala", "“Prefecto General” es un cargo y “Prefecto Nacional Naval” un destino",
+      "Grado y cargo son sinónimos dentro del Personal Superior", "“Prefecto de Zona” es un grado del Personal Superior"],
+    "Grado ≠ Cargo ≠ Destino. El grado es la jerarquía; el cargo, la función que se desempeña."),
+  () => {
+    const notDirect = one(ALL_DIRS.filter((d) => DIR_OF[d] !== PN));
+    return mc("Orgánica PNA", "¿Cuál de estos organismos NO depende directamente del Prefecto Nacional Naval?", notDirect, DIRECT,
+      `${notDirect} depende de la ${DIR_OF[notDirect]}. De forma directa dependen: ${DIRECT.join(", ")}.`);
+  },
+  () => {
+    const g = one(DG_NAMES.filter((x) => DG[x].length >= 2));
+    const corr = DG[g];
+    const wrong = pick(ALL_DIRS.filter((d) => DIR_OF[d] !== g), 6 - Math.min(corr.length, 4));
+    return multi("Orgánica PNA", `Seleccioná TODAS las direcciones que dependen de la ${g}.`, corr, wrong,
+      `${g}: ${corr.join(", ")}.`);
+  },
+  () => mc("Regiones y PPZZ", "¿Cuántas Direcciones de Región y cuántas Prefecturas de Zona existen?", "3 Direcciones de Región y 10 Prefecturas de Zona",
+    ["4 Direcciones de Región y 10 Prefecturas de Zona", "3 Direcciones de Región y 12 Prefecturas de Zona", "3 Direcciones de Región y 9 Prefecturas de Zona", "2 Direcciones de Región y 10 Prefecturas de Zona"],
+    "Norte 3 + Centro 4 + Sur 3 = 10 Prefecturas de Zona."),
+  () => {
+    const p = one(PZ);
+    return mc("Regiones y PPZZ", `¿Qué Prefectura de Zona tiene su sede en ${p.sede}?`, `${p.s} – ${p.n}`, PZ.map((x) => `${x.s} – ${x.n}`),
+      `${p.s} (${p.n}) tiene sede en ${p.sede} y pertenece a la Región ${p.reg}.`);
+  },
+  () => {
+    const r = one(Object.keys(REG));
+    const inR = PZ.filter((p) => p.reg === r).map((p) => p.s);
+    const out = PZ.filter((p) => p.reg !== r).map((p) => p.s);
+    return multi("Regiones y PPZZ", `Seleccioná TODAS las Prefecturas de Zona que dependen de la Dirección de Región ${r} (sede ${REG[r].sede}).`,
+      inR, pick(out, 3), `Región ${r}: ${PZ.filter((p) => p.reg === r).map((p) => `${p.s} (${p.sede})`).join(", ")}.`);
+  },
+  () => {
+    const r = one(Object.keys(REG));
+    return mc("Cuatrigramas", `¿Qué cuatrigrama identifica a la Dirección de Región ${r}?`, REG[r].c, ["DNOR", "DCEN", "DSUR", "DREN", "DRSU", "DIRN"],
+      "DNOR: Región Norte · DCEN: Región Centro · DSUR: Región Sur.");
+  },
+  () => mc("Niveles de Prefecturas", "¿Qué norma establece la clasificación de las dependencias en Niveles I a V?", "Disposición PLAE, SR.9 Nº 13 “C”/2005",
+    ["Ley 18.398, art. 30", "Disposición DPLA Nº 21/2017", "Reglamento General del Servicio, cap. 4", "Resolución del Ministerio de Seguridad Nº 13/2005"],
+    "La Disposición PLAE, SR.9 Nº 13 “C”/2005 define denominación, nivel y equivalencia de grado del titular."),
+  () => {
+    const n = one(NIV);
+    return mc("Niveles de Prefecturas", `Una dependencia de ${n.n} (por ejemplo ${n.ej}) tiene como equivalencia de jefatura:`, n.gr, NIV.map((x) => x.gr),
+      "I PM · II PP · III PR · IV OP/SP · V SS.BB.");
+  },
+  () => mc("Orgánica Prefecturas", "¿Qué sección figura en el organigrama de Prefecturas Nivel I y II pero NO en el de Nivel III?",
+    "Sección Control de Buques por el Estado Rector del Puerto", ["Sección Guardia y Patrullaje", "Sección Armería", "Sección Protección Marítima", "Sección Policía de Seguridad de la Navegación"],
+    "Nivel III mantiene Protección Marítima, Guardia y Patrullaje, Policía de Seguridad Judicial y Sumarios, Armería, Policía de Seguridad de la Navegación e Informática; no tiene Control de Buques por el Estado Rector del Puerto (ni Sección Sanidad)."),
+  () => mc("Orgánica Prefecturas", "En el organigrama de Prefecturas Nivel III, ¿dónde se ubica la Sección Administrativo Financiera?", "Dentro de la División Logística",
+    ["Depende directamente del Jefe", "Dentro de la División Operaciones", "Dentro de la Sección Despacho", "No existe en Nivel III"],
+    "En Nivel I y II la Sección Administrativo Financiera depende directo del Jefe; en Nivel III pasa a integrar la División Logística junto a Personal y Material y Talleres."),
+  () => mc("Orgánica Prefecturas", "En el organigrama de Prefecturas Nivel I y II, ¿qué subsección aparece vinculada a las Prefecturas Nivel IV?", "Subsección Protección Marítima",
+    ["Subsección Contabilidad", "Subsección Control de Gestión", "Subsección Rendiciones de Cuentas", "Subsección Guardia"],
+    "Las Prefecturas Nivel IV tienen asociada una Subsección Protección Marítima."),
+  () => multi("Orgánica PPZZ", "En el organigrama de las Prefecturas de Zona, seleccioná TODOS los elementos que asisten directamente al Prefecto de Zona (fuera de las divisiones).",
+    ["Sección Jurídica", "Delegación de Inteligencia e Investigación Criminal", "Sección Científico Pericial"],
+    ["Sección Tesorería", "Sección Planes", "Sección Despacho y Archivo"],
+    "Junto al Prefecto de Zona: Sección Jurídica, Delegación de Inteligencia e Investigación Criminal y Sección Científico Pericial."),
+  () => multi("Orgánica PPZZ", "En el organigrama de las Prefecturas de Zona, seleccioná TODAS las divisiones que se agrupan bajo el Departamento Operaciones.",
+    ["División Logística", "División Operaciones", "División Administrativo Financiera"], ["División Secretaría", "Jefe de Operaciones de Frontera"],
+    "Bajo el Departamento Operaciones: Logística, Operaciones y Administrativo Financiera. División Secretaría y Jefe de Operaciones de Frontera cuelgan del Prefecto de Zona."),
+  () => mc("Orgánica PPZZ", "La Sección Armería, ¿en qué división se ubica en una Prefectura de Zona y en qué división en una Prefectura Nivel I/II?",
+    "PPZZ: División Logística · Prefectura Nivel I/II: División Operaciones",
+    ["PPZZ: División Operaciones · Prefectura Nivel I/II: División Logística", "En ambos casos, División Logística", "En ambos casos, División Operaciones", "PPZZ: División Secretaría · Prefectura Nivel I/II: depende del Jefe"],
+    "Diferencia clásica entre organigramas: en PPZZ Armería está en Logística; en las Prefecturas Nivel I y II, en Operaciones."),
+  () => mc("Agrupamiento del personal", "¿Qué cuerpo existe solo en el Personal Subalterno?", "Cuerpo Auxiliar (CX)",
+    ["Cuerpo Profesional (CP)", "Cuerpo General (CG)", "Cuerpo Complementario (CC)", "Cuerpo de Sanidad (CS)"], "Superior: CG, CP, CC. Subalterno: CG, CX, CC."),
+  () => mc("Cuerpo Profesional", "¿Qué requisitos de ingreso tiene el Cuerpo Profesional según el material?", "Título universitario e ingreso entre 18 y 35 años",
+    ["Título secundario e ingreso entre 18 y 25 años", "Título universitario e ingreso entre 21 y 40 años", "Haber egresado del Cuerpo General", "Título terciario e ingreso hasta los 30 años"],
+    "Integrado por ciudadanos con estudios universitarios, de 18 a 35 años; cada escalafón se identifica por un color en la jineta."),
+  () => {
+    const e = one(ESC);
+    return mc("Cuerpo Profesional", `Un Subprefecto con jineta de color ${e.c.toLowerCase()} entre las tiras pertenece al escalafón:`, e.e, ESC.map((x) => x.e),
+      ESC.map((x) => `${x.e} ${x.c.toLowerCase()}`).join(" · ") + ".");
+  },
+  () => {
+    const sc = Math.random() < 0.5 ? SUP : SUB;
+    const up = Math.random() < 0.5;
+    const i = up ? Math.floor(Math.random() * 7) : 1 + Math.floor(Math.random() * 7);
+    const ans = sc[up ? i + 1 : i - 1];
+    return mc("Escala jerárquica", `¿Cuál es el grado inmediato ${up ? "superior" : "inferior"} a ${sc[i]}?`, ans, sc.filter((g) => g !== sc[i]),
+      "Escala: " + sc.join(" → ") + ".");
+  },
+  () => {
+    const q = one([
+      ["¿Cuál es el grado más alto de los Oficiales Subalternos?", "Subprefecto"],
+      ["¿Cuál es el grado más bajo de los Oficiales Jefes?", "Prefecto"],
+      ["¿Cuál es el grado más bajo de los Oficiales Superiores?", "Prefecto Mayor"],
+      ["¿Cuál es el grado más bajo de los Oficiales Subalternos?", "Oficial Ayudante"]]);
+    return mc("Escala jerárquica", q[0], q[1], SUP, "Subalternos: OA, OX, OP, SP · Jefes: PR, PP · Superiores: PM, PG.");
+  },
+  () => {
+    const q = one([
+      ["¿Qué grado integra el agrupamiento “Tropas”?", "Marinero"],
+      ["¿Cuál es el grado más alto de los Suboficiales Subalternos?", "Ayudante de Primera"],
+      ["¿Cuál es el grado más bajo de los Suboficiales Superiores?", "Ayudante Principal"],
+      ["¿Cuál es el grado más alto de los Cabos?", "Cabo Primero"]]);
+    return mc("Escala jerárquica", q[0], q[1], SUB, "Tropas: Marinero · Cabos: Cabo Segundo, Cabo Primero · Suboficiales Subalternos: Ayudante de Tercera, Segunda, Primera · Suboficiales Superiores: Ayudante Principal, Ayudante Mayor.");
+  },
+  () => mc("Escala jerárquica", "Según el material, ¿qué artículo de la Ley 18.398 clasifica los grados del Personal Superior?", "Artículo 30",
+    ["Artículo 20", "Artículo 31", "Artículo 4", "Artículo 18"], "Art. 4: jurisdicción · Art. 20: agrupamiento del personal · Art. 30: grados del Personal Superior · Art. 31: grados del Personal Subalterno."),
+  () => mc("Grado, cargo y destino", "¿Cuál es la definición de DESTINO?", "Organismo o dependencia en la que se prestan servicios",
+    ["Jerarquía personal dentro de la escala", "Función del servicio que se desempeña", "Actividad que implica la conducción de un elemento orgánico", "Lugar de residencia declarado por el efectivo"],
+    "Grado: jerarquía · Cargo: función que se desempeña en el destino · Destino: organismo o dependencia donde presta servicios."),
+  () => {
+    const c = one([["Encargado de la biblioteca", "Cargo funcional"], ["Encargado de armería", "Cargo funcional"], ["Oficial de Bienestar", "Cargo funcional"],
+      ["Jefe de la División Operaciones", "Cargo de estructura"], ["Jefe de la Sección Personal", "Cargo de estructura"], ["Encargado de electricidad", "Cargo funcional"]]);
+    return mc("Glosario", `“${c[0]}”, ¿qué tipo de cargo es?`, c[1], ["Cargo de estructura", "Cargo funcional", "Destino", "Grado"],
+      "Cargo de estructura: conducción de un elemento orgánico. Cargo funcional: cargos internos (electricidad, biblioteca, armería) o funciones (enlaces, Oficial de Bienestar) sin nivel de elemento orgánico.");
+  },
+  () => mc("Glosario", "Según el glosario, ¿quién coordina normalmente un asunto?", "El responsable primario del asunto",
+    ["El superior de mayor grado presente", "El organismo que asesora", "El Jefe de Servicios", "Quien interviene sin ser responsable primario"],
+    "Coordinar: disponer actividades con método combinando esfuerzos. Normalmente coordina el responsable primario."),
+  () => {
+    const g = one(GLOS);
+    return mc("Glosario", `“${g.d}” corresponde a:`, g.t, GLOS.map((x) => x.t), `${g.t}: ${g.d}`);
+  },
+  () => mc("Guardia en dependencias", "¿De quién depende el Oficial de Guardia?", "Del Jefe de Servicios",
+    ["Del Ayudante de Guardia", "Del Oficial de Ribera", "Directamente del Prefecto de Zona", "Del Jefe de la División Logística"],
+    "Depende del Jefe de Servicios, a quien secunda en lo referente a la guardia interna, de la que es el responsable directo."),
+  () => mc("Guardia en dependencias", "En dependencias de escasa dotación, el Oficial de Guardia tiene agregadas las funciones del:", "Oficial de Ribera",
+    ["Jefe de Servicios", "Oficial de Sumarios", "Ayudante de Guardia", "Jefe de la División Operaciones"], "Así lo establecen sus funciones."),
+  () => mc("Guardia en dependencias", "En dependencias con escasa dotación de oficiales, ¿quiénes cumplen funciones como Jefe de Servicios?", "Los Suboficiales Superiores",
+    ["Los Cabos Primeros", "Los Oficiales Ayudantes en comisión", "El Ayudante de Guardia", "El personal de Tropa más antiguo"],
+    "En esas dependencias los Suboficiales Superiores cumplen funciones como Jefe de Servicios."),
+  () => mc("Guardia en dependencias", "El Ayudante de Guardia es…", "El suboficial más antiguo del trozo de guardia, y depende del Oficial de Guardia",
+    ["El oficial más moderno de la dependencia, y depende del Jefe de Servicios", "El suboficial más moderno del trozo, y depende del Cabo de Guardia",
+      "El suboficial más antiguo de la dependencia, y depende del Prefecto", "El cabo más antiguo, y depende del Oficial de Ribera"],
+    "Depende del Oficial de Guardia, a quien secunda en la guardia; es el suboficial más antiguo del trozo."),
+  () => mc("Guardia en dependencias", "¿En qué documento se asientan por orden cronológico las novedades de la dependencia y la jurisdicción?", "Libro de Guardia",
+    ["Parte diario del personal", "Libro de Actas", "Registro CAPNA", "Memorando de servicio"],
+    "El Libro de Guardia registra cronológicamente novedades, movimientos y hechos del servicio; lo lleva el Oficial de Guardia ajustándose a lo reglamentado."),
+  () => {
+    const corr = pick(OG_TASKS, 3), wrong = pick(AG_TASKS, 2);
+    return multi("Guardia en dependencias", "Seleccioná TODAS las tareas que corresponden al OFICIAL DE GUARDIA (no al Ayudante de Guardia).", corr, wrong,
+      "Las opciones sin marcar son del Ayudante de Guardia: informar al Oficial de Guardia, contribuir al control de salidas, intervenir en zafarranchos, controlar al Cabo de Guardia.");
+  },
+  () => mc("Puestos de guardia", "¿Cuál es la finalidad de los PUESTOS EXTERNOS?",
+    "Asegurar el cumplimiento de leyes, reglamentos, disposiciones y órdenes en la jurisdicción, en especial en los puertos",
+    ["Brindar vigilancia y seguridad a las instalaciones de la dependencia", "Controlar el cumplimiento de horarios, servicios y órdenes internas",
+      "Contribuir al mantenimiento del orden interno", "Fiscalizar la salida del personal subalterno"],
+    "Puestos internos: vigilancia y seguridad de instalaciones, orden interno, control de horarios y órdenes. Puestos externos: cumplimiento de la normativa en la jurisdicción y los puertos."),
+  () => {
+    const q = one(QC);
+    return Math.random() < 0.5
+      ? mc("Código Q", `¿Qué significa ${q.c}?`, q.m, QC.map((x) => x.m), `${q.c}: ${q.m}. Ejemplo: ${q.ex.replace("___", q.c)}.`)
+      : mc("Código Q", `¿Qué código Q usás para indicar: “${q.m}”?`, q.c, QC.map((x) => x.c), `${q.c}: ${q.m}.`);
+  },
+  () => {
+    const w = one(CUATRI);
+    const ok = w.split("").map((c) => PHON[c]);
+    const wrongs = new Set();
+    while (wrongs.size < 3) {
+      const k = Math.floor(Math.random() * w.length); const alt = ok.slice(); alt[k] = one(PHON_BAD[w[k]]); wrongs.add(alt.join(" – "));
+    }
+    return mc("Código fonético", `¿Cómo se deletrea correctamente “${w}” con el código fonético internacional?`, ok.join(" – "), Array.from(wrongs),
+      `${w} = ${ok.join(" – ")}.`);
+  },
+  () => {
+    const h = Math.floor(Math.random() * 24), m = one([5, 10, 15, 20, 30, 40, 45, 50]);
+    const hh = String(h).padStart(2, "0"), mm = String(m).padStart(2, "0");
+    const d = uniq([`${h}:${mm}`, `${hh}.${mm} hs`, `${h}${mm}`, `${hh} ${mm}`, `${hh}:${mm} hs.`]).filter((x) => x !== hh + mm);
+    return mc("Reglamento de Correspondencia", `¿Cómo se escribe la hora oficial ${hh}:${mm} en un documento?`, hh + mm, d,
+      "La hora oficial se escribe con cuatro cifras, sin separadores: 0815, 1940.");
+  },
+  () => mc("Reglamento de Correspondencia", "¿Cuál de estas reglas de redacción es correcta?", "Un mismo oficio trata un solo asunto o asuntos de la misma naturaleza",
+    ["Un oficio puede agrupar asuntos de distinta naturaleza si van al mismo destinatario", "Los nombres se escriben primero el apellido y luego los nombres",
+      "La hora oficial se escribe con dos puntos (08:15)", "Las fórmulas deben ser extensas y detalladas"],
+    "Reglas: un oficio, un asunto de la misma naturaleza; hora con cuatro cifras; primero nombres y luego apellidos; fórmulas claras, breves y profesionales."),
+  () => mc("Reglamento de Correspondencia", "¿Qué diferencia hay entre firma e inicialado/intervención?",
+    "La firma compromete forma y contenido; el inicialado deja constancia del trámite",
+    ["El inicialado compromete forma y contenido; la firma solo deja constancia", "Ambos comprometen solo la forma del documento", "La firma reemplaza al sello oficial", "El inicialado solo lo usa el Prefecto Nacional"],
+    "Firma: compromete forma y contenido. Inicialado/intervención: deja constancia del trámite. Sello oficial/interno/aclaratorio según el caso."),
+  () => {
+    const p = one([["Muy urgente", "Inmediato / 24 h hábiles"], ["Urgente", "Máximo 72 h"], ["Normal", "Máximo 5 días hábiles"]]);
+    return mc("Reglamento de Correspondencia", `¿Cuál es el plazo de trámite para un asunto clasificado como “${p[0]}”?`, p[1],
+      ["Inmediato / 24 h hábiles", "Máximo 72 h", "Máximo 5 días hábiles", "Máximo 48 h", "Máximo 10 días hábiles"], "Muy urgente: 24 h · Urgente: 72 h · Normal: 5 días hábiles.");
+  },
+  () => {
+    const s = one([
+      ["Durante la guardia ocurre un incidente en el muelle y debés comunicarlo a tu superior inmediato.", "Parte"],
+      ["Dos o más personas deben dejar constancia de lo tratado en una reunión.", "Acta"],
+      ["El Jefe necesita dejar a un subordinado una comunicación interna a modo de ayuda memoria.", "Memorando"],
+      ["Una autoridad competente emite un mandato escrito dentro de su jurisdicción.", "Disposición"],
+      ["Hay que transmitir una orden transitoria, rápida y breve.", "Mensaje interno"],
+      ["Se analiza una situación para que el superior pueda tomar una decisión.", "Informe"],
+      ["Se difunde información institucional con estructura periodística.", "Informativo"]]);
+    return mc("Documentos administrativos", s[0] + " ¿Qué documento corresponde?", s[1], DOCS.map((d) => d.d),
+      DOCS.find((d) => d.d === s[1]).d + ": " + DOCS.find((d) => d.d === s[1]).f);
+  },
+  () => mc("GDE", "Llega una nota en papel que debe agregarse a un Expediente Electrónico. ¿Qué corresponde hacer?",
+    "Digitalizarla o importarla mediante GEDO (ej. IFGRA) y luego vincularla al EE",
+    ["Vincularla directamente al EE sin pasar por GEDO", "Enviarla por CCOO como comunicación oficial y archivarla en papel", "Caratular un nuevo expediente para cada hoja", "Adjuntarla en el Escritorio Único como tarea pendiente"],
+    "Punto clave: si un documento viene en papel o PDF, se digitaliza o importa mediante GEDO antes de vincularlo al Expediente Electrónico."),
+  () => {
+    const f = one(FLOW.filter((x) => x.s !== "Consultar / continuar el trámite"));
+    return mc("GDE", `En el flujo de tramitación, la acción “${f.s}” se realiza en el módulo:`, f.m, ["EE", "GEDO", "CCOO", "EU"],
+      "Caratular, vincular, pase y consulta: EE. Generar/importar y firmar: GEDO.");
+  },
+  () => mc("GDE", "¿Cuál es la dirección del portal de GDE?", "portal.gde.gob.ar", ["gde.prefecturanaval.gob.ar", "intranet.pna.gob.ar/gde", "portal.gde.gov.ar", "gde.mseg.gob.ar"],
+    "Portal: portal.gde.gob.ar. Módulos: EU, CCOO, GEDO, EE."),
+  () => mc("CAPNA y cuatrigramas", "¿Qué es el CAPNA?", "El Catálogo de Códigos Administrativos de la PNA, para identificar destinos, grados, cuerpos, escalafones y otras categorías",
+    ["El Código de Procedimientos Administrativos Navales", "El Cuerpo Auxiliar de la PNA", "El registro de buques y personal embarcado", "El reglamento de correspondencia de la PNA"],
+    "CAPNA: Catálogo de Códigos Administrativos de la PNA. Se consulta en la Intranet."),
+  () => mc("CAPNA y cuatrigramas", "Un cuatrigrama es…", "Un código de cuatro caracteres que identifica destinos u organismos",
+    ["Un código de dos letras que identifica grado, cuerpo o escalafón", "Un código Q de cuatro letras", "La sigla de un documento GDE", "El número de legajo del personal"],
+    "Cuatrigramas (ej. DIOP, MPLA, ROSA, PZAP) = “matrícula administrativa” del destino. Bigramas: grado, cuerpo, escalafón."),
+  () => {
+    const s = one(SERV);
+    return mc("Servicios y agrupaciones", `¿Qué cuatrigrama corresponde a “${s.f}”?`, s.s, SERV.map((x) => x.s), SERV.map((x) => `${x.s}: ${x.f}`).join(" · ") + ".");
+  },
+  () => {
+    const e = one(ESC);
+    return mc("CAPNA y bigramas", `En los bigramas de escalafón, “${e.b}” identifica a:`, "Escalafón " + e.e, ESC.map((x) => "Escalafón " + x.e),
+      "SA Sanidad · CT Científico Tecnológico · JU Jurídico · IN Ingeniería · TN Técnica Naval.");
+  },
+  () => mc("Fuentes normativas", "¿En qué publicación interna se establecen las tareas particulares de una Dirección, PZ o Prefectura?", "Reglamento Especial",
+    ["Ley 18.398", "CAPNA", "Reglamento General del Servicio", "Disposición PLAE Nº 13/2005"],
+    "Tareas: Reglamento General del Servicio. Tareas particulares: Reglamento Especial (Direcciones / PP.ZZ. / Prefecturas).")
+];
+
+/* ============ armado del examen ============ */
+const N = 30, N_MATCH = 11, LIMIT = 25 * 60, PASS = 6;
+let exam = [], startAt = null, tick = null, done = false;
+const $ = (id) => document.getElementById(id);
+
+function build() {
+  const ms = pick(G_MATCH, N_MATCH).map((f) => f());
+  const os = pick(G_OTHER, N - N_MATCH).map((f) => f());
+  exam = shuffle(ms.concat(os));
+  done = false; startAt = null; clearInterval(tick); tick = null;
+  $("serial").textContent = "Modelo Nº " + String(Math.floor(1000 + Math.random() * 9000));
+  $("result").hidden = true; $("result").innerHTML = ""; $("confirm").hidden = true;
+  $("exam").classList.remove("locked");
+  [$("btnSubmit"), $("btnSubmit2")].forEach((b) => (b.disabled = false));
+  setClock(LIMIT, "idle", "arranca al responder");
+  render(); progress();
+  window.scrollTo({ top: 0 });
+}
+
+function render() {
+  const ol = $("qs"); ol.className = "qs"; ol.innerHTML = "";
+  exam.forEach((q, i) => {
+    const li = document.createElement("li");
+    li.className = "q"; li.id = "q" + i;
+    const kind = q.type === "mc" ? "Opción única" : q.type === "multi" ? "Opción múltiple" : "Completar lista";
+    let body = "";
+    if (q.type === "mc" || q.type === "multi") {
+      const t = q.type === "mc" ? "radio" : "checkbox";
+      body = `<div class="opts">${q.options.map((o, j) =>
+        `<label class="opt" id="q${i}l${j}"><input type="${t}" name="q${i}" id="q${i}o${j}" value="${j}"><span>${esc(o)}</span></label>`).join("")}</div>`;
+    } else {
+      body = `<div class="match">${q.rows.map((r, j) =>
+        `<div class="mrow" id="q${i}r${j}"><label for="q${i}s${j}" class="${r.mono ? "code" : ""}">${esc(r.label)}</label>
+          <select id="q${i}s${j}" name="q${i}s${j}"><option value="">— Elegí —</option>${q.choices.map((c, k) => `<option value="${k}">${esc(c)}</option>`).join("")}</select></div>`).join("")}</div>`;
+    }
+    const hint = q.type === "multi" ? `<p class="q-hint">Puede haber más de una correcta. Cada opción mal marcada descuenta.</p>`
+      : q.type === "match" ? `<p class="q-hint">Cada fila vale una parte del punto.</p>` : "";
+    li.innerHTML = `<div class="q-head"><span class="q-num">${i + 1}</span><div class="q-main">
+      <div class="q-meta"><span class="q-topic">${esc(q.topic)}</span><span class="q-kind">${kind}</span><span class="badge" id="q${i}b" hidden></span></div>
+      <p class="q-text">${esc(q.text)}</p>${hint}</div></div>${body}<p class="exp" id="q${i}e" hidden></p>`;
+    ol.appendChild(li);
+  });
+}
+
+function answerOf(i) {
+  const q = exam[i];
+  if (q.type === "mc") { const el = document.querySelector(`input[name="q${i}"]:checked`); return el ? q.options[+el.value] : null; }
+  if (q.type === "multi") return Array.from(document.querySelectorAll(`input[name="q${i}"]:checked`)).map((el) => q.options[+el.value]);
+  return q.rows.map((_, j) => { const v = $(`q${i}s${j}`).value; return v === "" ? null : q.choices[+v]; });
+}
+function isAnswered(i) {
+  const a = answerOf(i), q = exam[i];
+  if (q.type === "mc") return a !== null;
+  if (q.type === "multi") return a.length > 0;
+  return a.every((x) => x !== null);
+}
+function scoreOf(i) {
+  const q = exam[i], a = answerOf(i);
+  if (q.type === "mc") return a === q.answer ? 1 : 0;
+  if (q.type === "multi") {
+    const hit = a.filter((x) => q.correct.includes(x)).length, miss = a.length - hit;
+    return Math.max(0, (hit - miss) / q.correct.length);
+  }
+  return a.filter((x, j) => x === q.rows[j].answer).length / q.rows.length;
+}
+
+function progress() {
+  const n = exam.filter((_, i) => isAnswered(i)).length;
+  $("progTxt").textContent = `${n} de ${N} respondidas`;
+  $("progFill").style.width = (n / N) * 100 + "%";
+}
+
+/* ============ reloj ============ */
+const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+function setClock(left, state, note) {
+  $("clockTime").textContent = fmt(Math.max(0, left));
+  $("clock").dataset.state = state; $("clockNote").textContent = note;
+}
+function startClock() {
+  if (startAt || done) return;
+  startAt = Date.now();
+  const step = () => {
+    const left = LIMIT - Math.floor((Date.now() - startAt) / 1000);
+    setClock(left, left <= 60 ? "crit" : left <= 300 ? "warn" : "run", left <= 300 ? "quedan pocos minutos" : "en curso");
+    if (left <= 0) finish(true);
+  };
+  step(); tick = setInterval(step, 500);
+}
+
+/* ============ corrección ============ */
+function finish(timeout) {
+  if (done) return;
+  done = true; clearInterval(tick);
+  $("confirm").hidden = true;
+  const used = startAt ? Math.min(LIMIT, Math.floor((Date.now() - startAt) / 1000)) : 0;
+  let pts = 0, ok = 0, part = 0, bad = 0, none = 0;
+  exam.forEach((q, i) => {
+    const s = scoreOf(i), answered = isAnswered(i) || (q.type === "match" && answerOf(i).some((x) => x !== null));
+    pts += s;
+    const res = s === 1 ? "ok" : s > 0 ? "part" : answered ? "bad" : "none";
+    if (res === "ok") ok++; else if (res === "part") part++; else if (res === "bad") bad++; else none++;
+    markQuestion(i, res, s);
+  });
+  document.querySelectorAll("#exam input, #exam select").forEach((el) => (el.disabled = true));
+  $("exam").classList.add("locked");
+  [$("btnSubmit"), $("btnSubmit2")].forEach((b) => (b.disabled = true));
+  const nota = Math.round((pts / N) * 100) / 10;
+  const pass = nota >= PASS;
+  setClock(LIMIT - used, "idle", timeout ? "tiempo agotado" : `usaste ${fmt(used)}`);
+  const R = $("result");
+  R.innerHTML = `
+    ${timeout ? `<p class="timeout">Se terminaron los 25 minutos: el examen se entregó automáticamente.</p>` : ""}
+    <div class="result-top">
+      <div class="grade"><span class="grade-label">Nota final</span><span class="grade-num">${nota.toFixed(1).replace(".", ",")}<small>/10</small></span></div>
+      <span class="verdict ${pass ? "ok" : "bad"}">${pass ? "Aprobado" : "Desaprobado"}</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>${pts.toFixed(2).replace(".", ",")}</b><span>puntos de ${N}</span></div>
+      <div class="stat ok"><b>${ok}</b><span>correctas</span></div>
+      <div class="stat part"><b>${part}</b><span>parciales</span></div>
+      <div class="stat bad"><b>${bad + none}</b><span>incorrectas${none ? ` (${none} sin responder)` : ""}</span></div>
+      <div class="stat"><b>${fmt(used)}</b><span>tiempo usado</span></div>
+    </div>
+    <div class="result-tools">
+      <label class="toggle"><input type="checkbox" id="onlyErr"> Ver solo errores y parciales</label>
+      <button type="button" class="primary" id="btnAgain">Rendir otro examen</button>
+    </div>`;
+  R.hidden = false;
+  $("onlyErr").addEventListener("change", (e) => $("qs").classList.toggle("only-errors", e.target.checked));
+  $("btnAgain").addEventListener("click", build);
+  R.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+
+function markQuestion(i, res, s) {
+  const q = exam[i], li = $("q" + i), b = $(`q${i}b`), e = $(`q${i}e`), a = answerOf(i);
+  li.dataset.res = res;
+  b.hidden = false;
+  b.className = "badge " + (res === "ok" ? "ok" : res === "part" ? "part" : "bad");
+  b.textContent = res === "ok" ? "Correcta · 1 pt" : res === "part" ? `Parcial · ${s.toFixed(2).replace(".", ",")} pt` : res === "none" ? "Sin responder · 0 pt" : "Incorrecta · 0 pt";
+  if (q.type === "mc" || q.type === "multi") {
+    q.options.forEach((o, j) => {
+      const lab = $(`q${i}l${j}`);
+      const right = q.type === "mc" ? o === q.answer : q.correct.includes(o);
+      const chosen = q.type === "mc" ? a === o : a.includes(o);
+      let tag = "";
+      if (right) { lab.classList.add("is-right"); tag = chosen ? "Tu respuesta ✓" : "Correcta"; }
+      else if (chosen) { lab.classList.add("is-wrong"); tag = "Tu respuesta ✗"; }
+      if (tag) lab.insertAdjacentHTML("beforeend", `<span class="tag">${tag}</span>`);
+    });
+  } else {
+    q.rows.forEach((r, j) => {
+      const row = $(`q${i}r${j}`);
+      if (a[j] === r.answer) row.classList.add("is-right");
+      else { row.classList.add("is-wrong"); row.insertAdjacentHTML("beforeend", `<span class="fix">Correcto: ${esc(r.answer)}</span>`); }
+    });
+  }
+  e.innerHTML = `<b>Repaso</b>${esc(q.exp)}`;
+  e.hidden = false;
+}
+
+/* ============ eventos ============ */
+$("exam").addEventListener("change", () => { if (done) return; startClock(); progress(); });
+function askSubmit() {
+  if (done) return;
+  const left = exam.filter((_, i) => !isAnswered(i)).length;
+  if (left === 0) return finish(false);
+  $("confirmTxt").textContent = `Te quedan ${left} pregunta${left > 1 ? "s" : ""} sin completar. Si entregás ahora, cuentan como incorrectas (o parciales, en las listas a medio completar).`;
+  $("confirm").hidden = false;
+  $("confirm").scrollIntoView({ behavior: "auto", block: "center" });
+}
+$("btnSubmit").addEventListener("click", askSubmit);
+$("btnSubmit2").addEventListener("click", askSubmit);
+$("btnConfirm").addEventListener("click", () => finish(false));
+$("btnCancel").addEventListener("click", () => ($("confirm").hidden = true));
+$("btnNew").addEventListener("click", build);
+$("btnNew2").addEventListener("click", build);
+
+build();
+})();
+</script>
+</body>
+</html>
