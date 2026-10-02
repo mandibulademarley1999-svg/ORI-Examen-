@@ -222,7 +222,7 @@ select {
     <ul class="rules">
       <li><strong>30</strong> preguntas al azar</li>
       <li><strong>25:00</strong> min desde tu primera respuesta</li>
-      <li>Nota sobre <strong>10</strong> · aprobás con <strong>6</strong></li>
+      <li>Nota sobre <strong>10</strong> · aprobás con <strong>4</strong></li>
       <li>Las listas puntúan por fila</li>
     </ul>
   </header>
@@ -729,9 +729,6 @@ const G_OTHER = [
     ["Fuerza Armada, con dependencia orgánica del Ministerio de Defensa", "Fuerza de Seguridad Federal, con dependencia orgánica del Ministerio de Defensa",
       "Organismo descentralizado del Ministerio de Transporte", "Policía auxiliar dependiente de la Armada Argentina"],
     "PNA = Seguridad Federal + Autoridad Marítima + Policía especializada. Depende del Ministerio de Seguridad Nacional."),
-  () => mc("Ley 18.398", "¿Qué fórmula resume la “idea central para el examen” sobre la PNA?", "Seguridad Federal + Autoridad Marítima + Policía especializada",
-    ["Fuerza Armada + Autoridad Portuaria + Policía de Fronteras", "Seguridad Federal + Autoridad Portuaria + Policía judicial exclusiva", "Defensa Nacional + Autoridad Marítima + Guardia Costera"],
-    "La PNA es autoridad especializada en seguridad de la navegación, protección ambiental, policía portuaria y funciones administrativas/judiciales de su competencia."),
   () => {
     const f = one([["Juzgamiento de faltas", "Jurisdicción administrativa"], ["Control migratorio auxiliar", "Policía de seguridad"], ["Practicaje / pilotaje", "Seguridad de la navegación"],
       ["Detención de autores de delitos", "Policía judicial"], ["Sumarios por acaecimientos de la navegación", "Jurisdicción administrativa"], ["Registro de buques y personal", "Seguridad de la navegación"], ["Cumplimiento de mandatos judiciales", "Policía judicial"]]);
@@ -977,7 +974,7 @@ const G_OTHER = [
 ];
 
 /* ============ armado del examen ============ */
-const N = 30, N_MATCH = 11, LIMIT = 25 * 60, PASS = 6;
+const N = 30, N_MATCH = 11, LIMIT = 25 * 60, PASS = 4;
 let exam = [], startAt = null, tick = null, done = false;
 const $ = (id) => document.getElementById(id);
 
