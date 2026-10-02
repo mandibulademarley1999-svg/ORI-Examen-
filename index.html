@@ -142,6 +142,13 @@ button:disabled { opacity: .5; cursor: default; }
 .result-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
 .timeout { margin: 0; color: var(--bad); font-weight: 600; }
+.areas { display: grid; gap: 6px; }
+.arow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(60px, 140px) 3.5em; gap: 10px; align-items: center; font-size: 13.5px; }
+.aname { min-width: 0; overflow-wrap: anywhere; }
+.abar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.abar i { display: block; height: 100%; }
+.abar i.ok { background: var(--ok); } .abar i.part { background: var(--part); } .abar i.bad { background: var(--bad); }
+.anum { font-family: var(--f-mono); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Preguntas */
 .qs { display: grid; gap: 14px; margin-top: 18px; padding: 0; list-style: none; }
@@ -223,6 +230,7 @@ select {
       <li><strong>30</strong> preguntas al azar</li>
       <li><strong>25:00</strong> min desde tu primera respuesta</li>
       <li>Nota sobre <strong>10</strong> · aprobás con <strong>4</strong></li>
+      <li><strong>12</strong> temas en cada modelo</li>
       <li>Las listas puntúan por fila</li>
     </ul>
   </header>
@@ -978,10 +986,45 @@ const N = 30, N_MATCH = 11, LIMIT = 25 * 60, PASS = 4;
 let exam = [], startAt = null, tick = null, done = false;
 const $ = (id) => document.getElementById(id);
 
+/* Cada modelo cubre los 12 temas: 2 preguntas por tema (una de lista cuando el tema la tiene)
+   y 6 extra al azar, con un máximo de 4 por tema. */
+const AREAS = [
+  ["Ley 18.398 y jurisdicción", ["Ley 18.398", "Naturaleza y dependencia", "Ley 18.398 – Funciones", "Ámbito y jurisdicción", "Fuentes normativas"]],
+  ["Autoridades y orgánica PNA", ["Autoridades", "Orgánica PNA"]],
+  ["Regiones y Prefecturas de Zona", ["Regiones y PPZZ", "Cuatrigramas"]],
+  ["Niveles de Prefecturas", ["Niveles de Prefecturas"]],
+  ["Organigramas PPZZ y Prefecturas", ["Orgánica PPZZ", "Orgánica Prefecturas"]],
+  ["Grado, cargo, destino y glosario", ["Grado, cargo y destino", "Grado y cargo", "Glosario"]],
+  ["Personal: escala, cuerpos y escalafones", ["Escala jerárquica", "Agrupamiento del personal", "Cuerpo Profesional"]],
+  ["Guardia y puestos", ["Guardia en dependencias", "Puestos de guardia"]],
+  ["CAPNA, cuatrigramas y servicios", ["CAPNA y cuatrigramas", "CAPNA y bigramas", "Servicios y agrupaciones"]],
+  ["Código Q y fonético", ["Código Q", "Código fonético"]],
+  ["GDE", ["GDE"]],
+  ["Documentos y correspondencia", ["Documentos administrativos", "Reglamento de Correspondencia", "Redacción"]]
+];
+const MIXTO = "Repaso integrador";
+const AREA_OF = {}; AREAS.forEach(([a, ts]) => ts.forEach((t) => (AREA_OF[t] = a)));
+const PER_AREA = 2, MAX_AREA = 4;
+
 function build() {
-  const ms = pick(G_MATCH, N_MATCH).map((f) => f());
-  const os = pick(G_OTHER, N - N_MATCH).map((f) => f());
-  exam = shuffle(ms.concat(os));
+  const all = shuffle([...G_MATCH, ...G_OTHER].map((f) => { const q = f(); q.area = AREA_OF[q.topic] || MIXTO; return q; }));
+  const chosen = [], count = {};
+  const take = (q) => { chosen.push(q); all.splice(all.indexOf(q), 1); count[q.area] = (count[q.area] || 0) + 1; };
+  AREAS.forEach(([a]) => {
+    const m = all.find((q) => q.area === a && q.type === "match");
+    if (m) take(m);
+    while ((count[a] || 0) < PER_AREA) {
+      const o = all.find((q) => q.area === a && q.type !== "match") || all.find((q) => q.area === a);
+      if (!o) break; take(o);
+    }
+  });
+  const room = (q) => (count[q.area] || 0) < MAX_AREA;
+  while (chosen.length < N) {
+    const needMatch = chosen.filter((q) => q.type === "match").length < N_MATCH;
+    const q = (needMatch && all.find((x) => x.type === "match" && room(x))) || all.find(room);
+    if (!q) break; take(q);
+  }
+  exam = shuffle(chosen);
   done = false; startAt = null; clearInterval(tick); tick = null;
   $("serial").textContent = "Modelo Nº " + String(Math.floor(1000 + Math.random() * 9000));
   $("result").hidden = true; $("result").innerHTML = ""; $("confirm").hidden = true;
@@ -1011,7 +1054,7 @@ function render() {
     const hint = q.type === "multi" ? `<p class="q-hint">Puede haber más de una correcta. Cada opción mal marcada descuenta.</p>`
       : q.type === "match" ? `<p class="q-hint">Cada fila vale una parte del punto.</p>` : "";
     li.innerHTML = `<div class="q-head"><span class="q-num">${i + 1}</span><div class="q-main">
-      <div class="q-meta"><span class="q-topic">${esc(q.topic)}</span><span class="q-kind">${kind}</span><span class="badge" id="q${i}b" hidden></span></div>
+      <div class="q-meta"><span class="q-topic">${esc(q.area)}</span><span class="q-kind">${kind}</span><span class="badge" id="q${i}b" hidden></span></div>
       <p class="q-text">${esc(q.text)}</p>${hint}</div></div>${body}<p class="exp" id="q${i}e" hidden></p>`;
     ol.appendChild(li);
   });
@@ -1096,6 +1139,10 @@ function finish(timeout) {
       <div class="stat bad"><b>${bad + none}</b><span>incorrectas${none ? ` (${none} sin responder)` : ""}</span></div>
       <div class="stat"><b>${fmt(used)}</b><span>tiempo usado</span></div>
     </div>
+    <div class="areas">
+      <span class="grade-label">Resultado por tema</span>
+      ${areaRows()}
+    </div>
     <div class="result-tools">
       <label class="toggle"><input type="checkbox" id="onlyErr"> Ver solo errores y parciales</label>
       <button type="button" class="primary" id="btnAgain">Rendir otro examen</button>
@@ -1104,6 +1151,16 @@ function finish(timeout) {
   $("onlyErr").addEventListener("change", (e) => $("qs").classList.toggle("only-errors", e.target.checked));
   $("btnAgain").addEventListener("click", build);
   R.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+
+function areaRows() {
+  const order = AREAS.map(([a]) => a).concat([MIXTO]), agg = {};
+  exam.forEach((q, i) => { const a = (agg[q.area] = agg[q.area] || { p: 0, n: 0 }); a.p += scoreOf(i); a.n++; });
+  return order.filter((a) => agg[a]).map((a) => {
+    const { p, n } = agg[a], pct = Math.round((p / n) * 100);
+    const cls = pct >= 70 ? "ok" : pct >= 40 ? "part" : "bad";
+    return `<div class="arow"><span class="aname">${esc(a)}</span><span class="abar"><i class="${cls}" style="width:${pct}%"></i></span><span class="anum">${p.toFixed(1).replace(".", ",")}/${n}</span></div>`;
+  }).join("");
 }
 
 function markQuestion(i, res, s) {
