@@ -1,0 +1,195 @@
+{
+ "voz": "Kokoro ef_dora, fonética es-419 con yeísmo rehilado rioplatense (ʝ → ʃ)",
+ "escenas": [
+  {
+   "id": "s1",
+   "titulo": "Argentina en diciembre de 2023",
+   "frases": [
+    {
+     "id": "s1a",
+     "texto": "El 10 de diciembre de 2023, Javier Milei asumió la presidencia."
+    },
+    {
+     "id": "s1b",
+     "texto": "Ese mes, los precios subieron un 25,5 %, y la inflación interanual llegó al 211,4 %."
+    },
+    {
+     "id": "s1c",
+     "texto": "La pobreza alcanzaba al 41,7 % de las personas, y el desempleo era del 5,7 %."
+    },
+    {
+     "id": "s1d",
+     "texto": "Las cifras de 2023 reflejan sobre todo la gestión anterior; las de 2026 son parciales. Y los datos describen resultados: no prueban causas por sí solos."
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "titulo": "PBI, crecimiento y estructura productiva",
+   "frases": [
+    {
+     "id": "s2a",
+     "texto": "Según el INDEC, la economía cayó un 1,3 % en 2024 y creció un 4,5 % en 2025."
+    },
+    {
+     "id": "s2b",
+     "texto": "Buena parte de esa suba fue recuperación: el nivel quedó apenas un 3 % por encima del de 2023. La serie no permite hablar de máximos históricos."
+    },
+    {
+     "id": "s2c",
+     "texto": "En el primer semestre de 2026, el crecimiento interanual fue del 2,2 %."
+    },
+    {
+     "id": "s2d",
+     "texto": "En 2024, el agro rebotó tras la sequía, mientras la construcción y la industria cayeron con fuerza. La inversión total sigue debajo de su nivel de 2023."
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "titulo": "Evolución de la inflación",
+   "frases": [
+    {
+     "id": "s3a",
+     "texto": "La inflación mensual bajó del 25,5 % en diciembre de 2023 al 2,7 % un año después."
+    },
+    {
+     "id": "s3b",
+     "texto": "La interanual pasó del 211,4 % al 117,8 % en 2024, y al 31,5 % en 2025."
+    },
+    {
+     "id": "s3c",
+     "texto": "En 2026, las tasas mensuales oscilaron entre el 1,7 y el 3,4 %, con un acumulado del 23,6 % hasta septiembre."
+    },
+    {
+     "id": "s3d",
+     "texto": "Pero la interanual de septiembre, del 33,4 %, superó a la de diciembre: la baja se detuvo."
+    }
+   ]
+  },
+  {
+   "id": "s4",
+   "titulo": "Mercado laboral, salarios y poder adquisitivo",
+   "frases": [
+    {
+     "id": "s4a",
+     "texto": "El desempleo subió del 5,7 al 7,5 % entre fines de 2023 y fines de 2025, y llegó al 7,9 % a mitad de 2026."
+    },
+    {
+     "id": "s4b",
+     "texto": "La informalidad pasó del 40,8 al 44,2 %, según la UBA y el CONICET."
+    },
+    {
+     "id": "s4c",
+     "texto": "El centro CEPA estima que el salario registrado real está un 8,2 % por debajo de noviembre de 2023, y el salario mínimo, un 40,8 %."
+    },
+    {
+     "id": "s4d",
+     "texto": "Esos cálculos dependen de la base elegida: noviembre es previo al salto de precios de diciembre."
+    }
+   ]
+  },
+  {
+   "id": "s5",
+   "titulo": "Pobreza y distribución del ingreso",
+   "frases": [
+    {
+     "id": "s5a",
+     "texto": "La pobreza subió al 52,9 % en el primer semestre de 2024, el pico de la serie."
+    },
+    {
+     "id": "s5b",
+     "texto": "Luego bajó hasta el 28,2 % a fines de 2025, y volvió a subir al 32,3 % en el primer semestre de 2026."
+    },
+    {
+     "id": "s5c",
+     "texto": "La indigencia siguió el mismo patrón, y la desigualdad, medida por el coeficiente de Gini, casi no cambió."
+    }
+   ]
+  },
+  {
+   "id": "s6",
+   "titulo": "Gasto público: composición y evolución real",
+   "frases": [
+    {
+     "id": "s6a",
+     "texto": "El gasto público consolidado bajó del 41,6 % del PBI en 2023 al 35,6 % en 2024. El mayor recorte fue nacional."
+    },
+    {
+     "id": "s6b",
+     "texto": "Casi siete de cada diez pesos fueron a servicios sociales."
+    },
+    {
+     "id": "s6c",
+     "texto": "Otra estimación, del Congreso, da un 33 %, con distinta cobertura: no deben mezclarse."
+    },
+    {
+     "id": "s6d",
+     "texto": "En 2026, el gasto nacional se mantuvo casi estable en términos reales, con menos subsidios y más intereses de deuda."
+    }
+   ]
+  },
+  {
+   "id": "s7",
+   "titulo": "Exportaciones y producción industrial",
+   "frases": [
+    {
+     "id": "s7a",
+     "texto": "Las exportaciones crecieron de 66.789 a 87.111 millones de dólares entre 2023 y 2025."
+    },
+    {
+     "id": "s7b",
+     "texto": "Pero las manufacturas industriales perdieron peso en el total."
+    },
+    {
+     "id": "s7c",
+     "texto": "La industria cayó un 9,4 % en 2024, creció sólo un 1,6 % en 2025, y volvió a caer en 2026."
+    },
+    {
+     "id": "s7d",
+     "texto": "En 2025, textiles y productos de metal seguían más de un 20 % por debajo de 2023, y en 2026 la industria usó menos del 60 % de su capacidad."
+    }
+   ]
+  },
+  {
+   "id": "s8",
+   "titulo": "Educación, salud y seguridad",
+   "frases": [
+    {
+     "id": "s8a",
+     "texto": "En educación y salud, faltan series homogéneas, y los datos llegan con rezago."
+    },
+    {
+     "id": "s8b",
+     "texto": "Las pruebas Aprender de sexto grado mejoraron en Lengua y en Matemática, y la mortalidad infantil subió en 2024."
+    },
+    {
+     "id": "s8c",
+     "texto": "Los homicidios bajaron de 4,4 a 3,6 cada cien mil habitantes, y los femicidios, de 250 a 200."
+    }
+   ]
+  },
+  {
+   "id": "s9",
+   "titulo": "Síntesis y desafíos pendientes",
+   "frases": [
+    {
+     "id": "s9a",
+     "texto": "En síntesis: bajaron la inflación y, tras un pico, la pobreza. La economía se recuperó, y el gasto se redujo."
+    },
+    {
+     "id": "s9b",
+     "texto": "Pero subieron el desempleo y la informalidad, y los salarios, la industria y la inversión siguen por debajo de los niveles de 2023."
+    },
+    {
+     "id": "s9c",
+     "texto": "Quedan desafíos: sostener la desinflación, recuperar el empleo formal, y completar las estadísticas que faltan."
+    },
+    {
+     "id": "s9d",
+     "texto": "Con 2026 todavía abierto, el balance dependerá de los próximos datos oficiales."
+    }
+   ]
+  }
+ ]
+}

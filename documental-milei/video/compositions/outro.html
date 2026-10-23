@@ -1,0 +1,70 @@
+<template>
+<style>
+#root { position:absolute; inset:0; background:#0D1117; color:#EEE8DD; font-family:'Inter',sans-serif; overflow:hidden; }
+.stage { position:absolute; inset:0; }
+.abs { position:absolute; }
+.kicker { font-family:'IBM Plex Mono',monospace; font-size:21px; letter-spacing:.18em; text-transform:uppercase; color:#E2A63B; }
+.h1 { font-family:'Playfair Display',serif; font-weight:600; letter-spacing:-.01em; }
+.body { font-size:27px; line-height:1.38; color:#EEE8DD; }
+.mute { color:#A7AFBC; }
+.mono { font-family:'IBM Plex Mono',monospace; }
+.src { font-family:'IBM Plex Mono',monospace; font-size:19px; line-height:1.45; color:#A7AFBC; }
+.chip { font-family:'IBM Plex Mono',monospace; font-size:18px; letter-spacing:.06em; color:#EEE8DD; border:1px solid #26323F; padding:6px 12px; border-radius:3px; white-space:nowrap; }
+.chip.part { color:#E2A63B; border-color:#E2A63B; }
+.ptitle { font-family:'Playfair Display',serif; font-size:34px; font-weight:600; color:#EEE8DD; }
+.psub { font-family:'IBM Plex Mono',monospace; font-size:18px; color:#A7AFBC; margin-top:8px; letter-spacing:.04em; }
+.num { font-variant-numeric:tabular-nums; }
+.note { font-family:'IBM Plex Mono',monospace; font-size:18px; line-height:1.5; color:#EEE8DD; border-left:3px solid #E2A63B; padding:8px 0 8px 18px; }
+svg text { font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; }
+svg .lbl { fill:#A7AFBC; font-size:21px; }
+svg .lbl2 { fill:#838D9C; font-size:17px; font-family:'IBM Plex Mono',monospace; }
+svg .val { fill:#EEE8DD; font-size:24px; font-weight:600; }
+svg .valb { fill:#EEE8DD; font-size:30px; font-weight:700; }
+.prog { position:absolute; left:120px; right:120px; top:1006px; height:3px; display:flex; gap:8px; }
+.prog i { flex:1; background:#26323F; }
+.prog i.on { background:#E2A63B; }
+.progl { position:absolute; right:120px; top:96px; font-family:'IBM Plex Mono',monospace; font-size:16px; color:#838D9C; letter-spacing:.12em; }
+.w { display:inline-block; }
+</style>
+<div id="root" data-composition-id="outro" data-width="1920" data-height="1080">
+<div id="o-stage" class="stage clip" data-start="0" data-duration="12.0" data-track-index="1">
+<div id="o-fade" class="stage">
+<div class="abs" style="left:160px;top:140px;width:1600px">
+<div id="o-k" class="kicker">Fuentes de los datos</div>
+<div style="margin-top:28px"><div id="o-l0" class="body" style="font-size:25px;margin-top:10px">INDEC — Cuentas nacionales, IPC, EPH, IPI, comercio exterior, capacidad instalada</div><div id="o-l1" class="body" style="font-size:25px;margin-top:10px">Ministerio de Economía — Gasto Público Consolidado 2009–2024 · recaudación ARCA</div><div id="o-l2" class="body" style="font-size:25px;margin-top:10px">Oficina de Presupuesto del Congreso (OPC)</div><div id="o-l3" class="body" style="font-size:25px;margin-top:10px">BCRA · Secretaría de Energía · Secretaría de Trabajo (SIPA)</div><div id="o-l4" class="body" style="font-size:25px;margin-top:10px">IIEP UBA-CONICET · CEPA (sobre INDEC) · Chequeado (sobre INDEC)</div><div id="o-l5" class="body" style="font-size:25px;margin-top:10px">Ministerio de Salud — DEIS · Ministerio de Seguridad — SNIC · CSJN — Oficina de la Mujer</div><div id="o-l6" class="body" style="font-size:25px;margin-top:10px">Argentinos por la Educación (pruebas Aprender)</div></div>
+<div id="o-n" class="src" style="margin-top:56px;font-size:19px;color:#EEE8DD">Base: «Presidencia de Javier Milei · Observatorio 2023–2026», 51 indicadores, 59 fuentes. Corte: 23 de octubre de 2026.<br>N/D indica ausencia de cifra verificable, nunca cero. Las cifras de 2026 son parciales. Los datos no establecen causalidad.</div>
+<div id="o-c" class="src" style="margin-top:40px">Animación y composición: HyperFrames (HeyGen) · GSAP · Narración: voz sintética (Kokoro) · Música: original</div>
+</div></div></div></div>
+<script>
+(() => {
+
+const tl = gsap.timeline({ paused: true });
+const fmt = (v, d) => { const s = Math.abs(v).toFixed(d).split('.'); s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return (v < 0 ? '−' : '') + s.join(','); };
+const G = {
+  inn: (s, t, d = 0.6) => tl.fromTo(s, { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: d, ease: 'power3.out' }, t),
+  up: (s, t, d = 0.8) => tl.fromTo(s, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: d, ease: 'expo.out' }, t),
+  out: (s, t, d = 0.3) => tl.to(s, { opacity: 0, filter: 'blur(6px)', duration: d, ease: 'power2.in' }, t),
+  dim: (s, t, o = 0.22) => tl.to(s, { opacity: o, duration: 0.6, ease: 'power2.inOut' }, t),
+  vbar: (s, t, neg) => tl.fromTo(s, { scaleY: 0, transformOrigin: neg ? '50% 0%' : '50% 100%' }, { scaleY: 1, duration: 1.1, ease: 'expo.out', transformOrigin: neg ? '50% 0%' : '50% 100%' }, t),
+  hbar: (s, t, neg) => tl.fromTo(s, { scaleX: 0, transformOrigin: neg ? '100% 50%' : '0% 50%' }, { scaleX: 1, duration: 1.1, ease: 'expo.out', transformOrigin: neg ? '100% 50%' : '0% 50%' }, t),
+  draw: (s, t, d = 0.9) => tl.fromTo(s, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: d, ease: 'power2.inOut' }, t),
+  dot: (s, t) => tl.fromTo(s, { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)', transformOrigin: '50% 50%' }, t),
+  cu: (s, to, d, pre, suf, t, dur = 1.4) => { const o = { v: 0 }; tl.fromTo(o, { v: 0 }, { v: to, duration: dur, ease: 'power2.out', onUpdate: () => { const el = document.querySelector(s); if (el) el.textContent = pre + fmt(o.v, d) + suf; } }, t); },
+  words: (s, t) => tl.fromTo(s + ' .w', { opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.3, stagger: 0.07, ease: 'power2.out' }, t),
+};
+
+tl.fromTo('#o-fade', { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0);
+G.inn('#o-k', 0.2);
+G.inn('#o-l0', 0.5, 0.5);
+G.inn('#o-l1', 0.6799999999999999, 0.5);
+G.inn('#o-l2', 0.86, 0.5);
+G.inn('#o-l3', 1.04, 0.5);
+G.inn('#o-l4', 1.22, 0.5);
+G.inn('#o-l5', 1.4, 0.5);
+G.inn('#o-l6', 1.58, 0.5);
+G.inn('#o-n', 2.2, 0.8); G.inn('#o-c', 3.0, 0.8);
+tl.to('#o-fade', { opacity: 0, duration: 1.2, ease: 'power2.in' }, 10.6);
+window.__timelines["outro"] = tl;
+})();
+</script>
+</template>

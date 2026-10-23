@@ -1,0 +1,244 @@
+{
+ "scenes": [
+  {
+   "id": "s1",
+   "title": "Argentina en diciembre de 2023",
+   "start": 0.0,
+   "duration": 39.37,
+   "voStart": 6.0,
+   "voDuration": 31.965,
+   "cues": {
+    "s1a": [
+     6.0,
+     10.352
+    ],
+    "s1b": [
+     10.952,
+     18.995
+    ],
+    "s1c": [
+     19.595,
+     26.912
+    ],
+    "s1d": [
+     27.512,
+     37.965
+    ]
+   },
+   "voMedia": 31.97
+  },
+  {
+   "id": "s2",
+   "title": "PBI, crecimiento y estructura productiva",
+   "start": 39.37,
+   "duration": 39.55,
+   "voStart": 2.2,
+   "voDuration": 35.955,
+   "cues": {
+    "s2a": [
+     2.2,
+     10.477
+    ],
+    "s2b": [
+     11.077,
+     20.848
+    ],
+    "s2c": [
+     21.448,
+     27.123
+    ],
+    "s2d": [
+     27.723,
+     38.155
+    ]
+   },
+   "voMedia": 35.98
+  },
+  {
+   "id": "s3",
+   "title": "Evolución de la inflación",
+   "start": 78.92,
+   "duration": 41.77,
+   "voStart": 2.2,
+   "voDuration": 38.173,
+   "cues": {
+    "s3a": [
+     2.2,
+     10.413
+    ],
+    "s3b": [
+     11.013,
+     22.107
+    ],
+    "s3c": [
+     22.707,
+     32.989
+    ],
+    "s3d": [
+     33.589,
+     40.373
+    ]
+   },
+   "voMedia": 38.19
+  },
+  {
+   "id": "s4",
+   "title": "Mercado laboral, salarios y poder adquisitivo",
+   "start": 120.69,
+   "duration": 39.21,
+   "voStart": 2.2,
+   "voDuration": 35.613,
+   "cues": {
+    "s4a": [
+     2.2,
+     13.912
+    ],
+    "s4b": [
+     14.512,
+     20.805
+    ],
+    "s4c": [
+     21.405,
+     31.901
+    ],
+    "s4d": [
+     32.501,
+     37.813
+    ]
+   },
+   "voMedia": 35.62
+  },
+  {
+   "id": "s5",
+   "title": "Pobreza y distribución del ingreso",
+   "start": 159.9,
+   "duration": 27.71,
+   "voStart": 2.2,
+   "voDuration": 24.112,
+   "cues": {
+    "s5a": [
+     2.2,
+     9.048
+    ],
+    "s5b": [
+     9.648,
+     19.867
+    ],
+    "s5c": [
+     20.467,
+     26.312
+    ]
+   },
+   "voMedia": 24.12
+  },
+  {
+   "id": "s6",
+   "title": "Gasto público: composición y evolución real",
+   "start": 187.61,
+   "duration": 34.05,
+   "voStart": 2.2,
+   "voDuration": 30.451,
+   "cues": {
+    "s6a": [
+     2.2,
+     13.869
+    ],
+    "s6b": [
+     14.469,
+     17.904
+    ],
+    "s6c": [
+     18.504,
+     24.584
+    ],
+    "s6d": [
+     25.184,
+     32.651
+    ]
+   },
+   "voMedia": 30.46
+  },
+  {
+   "id": "s7",
+   "title": "Exportaciones y producción industrial",
+   "start": 221.66,
+   "duration": 41.6,
+   "voStart": 2.2,
+   "voDuration": 38.003,
+   "cues": {
+    "s7a": [
+     2.2,
+     12.867
+    ],
+    "s7b": [
+     13.467,
+     16.923
+    ],
+    "s7c": [
+     17.523,
+     27.464
+    ],
+    "s7d": [
+     28.064,
+     40.203
+    ]
+   },
+   "voMedia": 38.02
+  },
+  {
+   "id": "s8",
+   "title": "Educación, salud y seguridad",
+   "start": 263.26,
+   "duration": 24.41,
+   "voStart": 2.2,
+   "voDuration": 20.805,
+   "cues": {
+    "s8a": [
+     2.2,
+     6.744
+    ],
+    "s8b": [
+     7.344,
+     14.661
+    ],
+    "s8c": [
+     15.261,
+     23.005
+    ]
+   },
+   "voMedia": 20.81
+  },
+  {
+   "id": "s9",
+   "title": "Síntesis y desafíos pendientes",
+   "start": 287.67,
+   "duration": 31.81,
+   "voStart": 2.2,
+   "voDuration": 28.211,
+   "cues": {
+    "s9a": [
+     2.2,
+     8.664
+    ],
+    "s9b": [
+     9.264,
+     17.093
+    ],
+    "s9c": [
+     17.693,
+     24.371
+    ],
+    "s9d": [
+     24.971,
+     30.411
+    ]
+   },
+   "voMedia": 28.23
+  }
+ ],
+ "outro": {
+  "start": 319.48,
+  "duration": 12.0
+ },
+ "total": 331.48
+}
