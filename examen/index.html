@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Examen · Organización Institucional (PNA)</title>
+<style>
+:root{--navy:#0B2545;--u1:#1D4E89;--u2:#0F766E;--u3:#9A4A08;--bg:#F2F5F9;--ok:#15803D;--okbg:#E7F6EC;--bad:#B42318;--badbg:#FDECEA;--line:#D8E0EA;--txt:#1E293B;--muted:#5B6B7F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;color:var(--txt);-webkit-tap-highlight-color:transparent}
+header{background:var(--navy);color:#fff;padding:22px 18px}
+header .in{max-width:820px;margin:0 auto}
+header small{letter-spacing:.08em;text-transform:uppercase;color:#C9D6E8;font-size:12px}
+header h1{margin:6px 0 0;font-size:clamp(24px,5vw,34px)}
+main{max-width:820px;margin:0 auto;padding:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px}
+.btn{appearance:none;border:0;border-radius:12px;padding:14px 20px;font-size:16px;font-weight:600;cursor:pointer;background:var(--navy);color:#fff;min-height:48px}
+.btn.sec{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.bar{height:8px;background:#E2E8F0;border-radius:99px;overflow:hidden;margin:6px 0 16px}
+.bar>div{height:100%;background:var(--navy);transition:width .25s}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;color:#fff}
+.q{font-size:clamp(18px,3.6vw,21px);line-height:1.4;margin:12px 0 16px;font-weight:600}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:12px;padding:14px 16px;font-size:16px;line-height:1.35;cursor:pointer;color:var(--txt);display:flex;gap:12px;align-items:flex-start;min-height:52px}
+.opt:hover{border-color:#94A3B8}
+.opt b{flex:none;width:26px;height:26px;border-radius:50%;background:#EEF2F7;display:flex;align-items:center;justify-content:center;font-size:14px}
+.opt.sel{border-color:var(--navy);background:#EEF2F7}
+.opt.ok{border-color:var(--ok);background:var(--okbg)}
+.opt.bad{border-color:var(--bad);background:var(--badbg)}
+.exp{margin-top:14px;padding:12px 14px;border-radius:12px;background:#F1F5F9;font-size:15px;line-height:1.45}
+.exp.ok{background:var(--okbg)}.exp.bad{background:var(--badbg)}
+.muted{color:var(--muted);font-size:14px}
+.score{font-size:56px;font-weight:800;margin:4px 0}
+.units{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0}
+.unit{border-radius:12px;padding:12px;color:#fff}
+.unit div{font-size:26px;font-weight:800}
+.rev{border-left:5px solid var(--line);padding:10px 14px;margin:10px 0;background:#fff;border-radius:8px}
+.rev.ok{border-color:var(--ok)}.rev.bad{border-color:var(--bad)}
+.rev p{margin:4px 0;font-size:15px;line-height:1.4}
+.hidden{display:none}
+ul.how{margin:8px 0 0;padding-left:20px;line-height:1.6}
+</style>
+</head>
+<body>
+<header><div class="in"><small>Prefectura Naval Argentina · Curso para Profesionales</small><h1>Examen · Organización Institucional</h1></div></header>
+<main>
+
+<section id="start" class="card">
+<h2 style="margin-top:0">30 preguntas al azar</h2>
+<p>Cada intento saca 30 preguntas distintas de un banco de <b id="poolN"></b>, con las opciones mezcladas. No hay tiempo límite.</p>
+<ul class="how">
+<li><b>Unidad 1:</b> Ley General, dependencia, organigrama, Prefecturas de Zona, escala jerárquica</li>
+<li><b>Unidad 2:</b> GDE, documentos, correspondencia, jerarquía normativa, MOI, CAPNA</li>
+<li><b>Unidad 3:</b> régimen disciplinario, licencias, Foja de Conceptos, guardia, uniformes</li>
+</ul>
+<div class="row" style="margin-top:16px">
+<label class="muted"><input type="checkbox" id="instant" checked> Mostrar la respuesta correcta después de cada pregunta</label>
+</div>
+<div class="row" style="margin-top:16px"><button class="btn" id="go">Empezar examen</button></div>
+</section>
+
+<section id="quiz" class="hidden">
+<div class="card">
+<div class="row" style="justify-content:space-between"><span class="muted" id="count"></span><span class="tag" id="utag"></span></div>
+<div class="bar"><div id="prog"></div></div>
+<div class="q" id="qtext"></div>
+<div class="opts" id="opts"></div>
+<div class="exp hidden" id="exp"></div>
+<div class="row" style="margin-top:18px;justify-content:space-between">
+<button class="btn sec" id="prev">Anterior</button>
+<button class="btn" id="next">Siguiente</button>
+</div>
+</div>
+</section>
+
+<section id="result" class="hidden">
+<div class="card" style="text-align:center">
+<div class="muted">Tu resultado</div>
+<div class="score" id="score"></div>
+<div id="verdict" style="font-weight:600"></div>
+<div class="units" id="units"></div>
+<div class="row" style="justify-content:center"><button class="btn" id="again">Nuevo examen (otras 30)</button><button class="btn sec" id="onlyBad">Repetir las que erré</button></div>
+</div>
+<div class="card"><h3 style="margin-top:0">Revisión</h3><div id="review"></div></div>
+</section>
+
+</main>
+<script>
+// Banco de preguntas. o[0] es la correcta (se mezclan al mostrar).
+const BANK=[
+// ===== UNIDAD 1
+{u:1,q:"¿Cuál es la Ley General de la Prefectura Naval Argentina?",o:["Ley 18.398","Ley 20.094","Ley 25.506","Ley 19.101"],e:"La Ley 18.398 (B.O. 10/10/1969) es la Ley General de la PNA. La 20.094 es la Ley de la Navegación."},
+{u:1,q:"¿Cuál es la Ley de la Navegación?",o:["Ley 20.094","Ley 18.398","Ley 25.506","Decreto 6.242/71"],e:"Ley 20.094, publicada el 15/01/1973."},
+{u:1,q:"¿Qué norma es la Reglamentación del Personal (RP)?",o:["Decreto 6.242/71 (R.I. PNA 6-008)","Decreto 457/2025","Decreto 561/2016","Ley 20.094"],e:"El Decreto 6.242/71 reglamenta la Ley 18.398 y es la RP, publicación R.I. PNA 6-008."},
+{u:1,q:"Según el texto actualizado de la Ley 18.398, la PNA es…",o:["Una Fuerza de Seguridad Federal","Una fuerza militar de la Armada","Una fuerza de defensa nacional","Un organismo civil descentralizado"],e:"El art. 1 actualizado por el Decreto 457/2025 la define como Fuerza de Seguridad Federal; no es fuerza militar ni de defensa."},
+{u:1,q:"¿De qué ministerio depende hoy la Prefectura?",o:["Ministerio de Seguridad Nacional","Ministerio de Defensa","Ministerio del Interior","Ministerio de Transporte"],e:"Art. 3: depende del Ministerio de Seguridad Nacional. Está en el área de Seguridad desde el Decreto 1.993/2010."},
+{u:1,q:"¿Qué decreto de 2025 actualizó el texto de la Ley 18.398?",o:["Decreto 457/2025","Decreto 1.993/2025","Decreto 561/2025","Decreto 6.242/2025"],e:"El Decreto 457/2025 rige desde el 8 de julio de 2025."},
+{u:1,q:"¿Cuál de estas fuerzas NO depende del mismo ministerio que la PNA?",o:["Armada Argentina","Gendarmería Nacional","Policía Federal Argentina","Policía de Seguridad Aeroportuaria"],e:"GNA, PFA y PSA dependen, como la PNA, del Ministerio de Seguridad Nacional. La Armada depende de Defensa."},
+{u:1,q:"¿Por qué la PNA es Autoridad Marítima?",o:["Porque la ley le asigna la policía de seguridad de la navegación y la jurisdicción administrativa de la navegación","Porque depende de la Armada","Porque administra todos los puertos privados","Porque lo dispone una ordenanza del PNN"],e:"Lo establecen las Leyes 18.398 y 20.094. Por eso el membrete dice “Autoridad Marítima”."},
+{u:1,q:"¿Qué es una ordenanza?",o:["Una norma de carácter general emitida por el Prefecto Nacional Naval","Un decreto del Poder Ejecutivo","Una resolución del Ministerio","Una disposición de un jefe de dependencia"],e:"La Ordenanza Marítima es emitida por el PNN."},
+{u:1,q:"¿Cuál NO es un servicio de policía del art. 2 de la Ley 18.398?",o:["Policía aeroportuaria","Seguridad de la navegación","Prevención de la contaminación por buques","Policía judicial"],e:"El art. 2 enumera: seguridad de la navegación, prevención de la contaminación por buques, seguridad y protección marítima, policía judicial y jurisdicción administrativa de la navegación."},
+{u:1,q:"¿Qué función incorporó la reforma de 2025 en el art. 6?",o:["Policía Auxiliar Pesquera","Funciones aduaneras","Funciones migratorias","Funciones sanitarias"],e:"Las aduaneras, migratorias y sanitarias ya existían; se agregó la de Policía Auxiliar Pesquera."},
+{u:1,q:"Desde 2025, la PNA es Autoridad de Aplicación del…",o:["Sistema Guardacostas","Sistema GDE","Régimen de Puertos Privados","Código Aduanero"],e:"Art. 5 inc. g del texto actualizado."},
+{u:1,q:"¿Cuál de estos lugares NO forma parte del ámbito de actuación de la PNA?",o:["Aeropuertos internacionales","Puertos sometidos a jurisdicción nacional","Costas y playas marítimas y fluviales","Antártida e Islas del Atlántico Sur"],e:"Los aeropuertos corresponden a la PSA."},
+{u:1,q:"¿Quién ejerce la Prefectura Nacional?",o:["El Prefecto Nacional Naval, Prefecto General del Cuerpo General designado por el PEN","El Ministro de Seguridad","El Jefe de la Armada","El Subprefecto Nacional Naval"],e:"El PNN es un Prefecto General del Cuerpo General / Escalafón General, en actividad o retiro, designado por el Poder Ejecutivo."},
+{u:1,q:"La Subprefectura Nacional la ejerce…",o:["Un Prefecto General en actividad","Un Prefecto Mayor en retiro","El Director General de Seguridad","El Secretario General"],e:"Con el título de Subprefecto Nacional Naval."},
+{u:1,q:"¿Cuántas Direcciones Generales tiene la PNA?",o:["Cuatro","Tres","Cinco","Diez"],e:"Seguridad; Seguridad Marítima y Portuaria; Recursos Humanos y Desarrollo; Administración y Logística."},
+{u:1,q:"¿De qué Dirección General depende la Dirección de Protección Ambiental?",o:["Seguridad Marítima y Portuaria","Seguridad","Recursos Humanos y Desarrollo","Administración y Logística"],e:"La DG de Seguridad Marítima y Portuaria agrupa Policía de Seguridad de la Navegación, Protección Ambiental y Policía Judicial, Protección Marítima y Puertos."},
+{u:1,q:"¿De qué Dirección General depende la Dirección del Personal (DPER)?",o:["Recursos Humanos y Desarrollo","Seguridad","Administración y Logística","Seguridad Marítima y Portuaria"],e:"RRHH y Desarrollo: Personal, Educación, Bienestar, Informática y Comunicaciones."},
+{u:1,q:"¿De qué Dirección General depende la Dirección de Operaciones?",o:["Seguridad","Seguridad Marítima y Portuaria","Recursos Humanos y Desarrollo","Administración y Logística"],e:"DG de Seguridad: Operaciones, Tráfico Marítimo, Protección Ciudadana, Inteligencia Criminal e Investigaciones."},
+{u:1,q:"Las direcciones de Material y de Administración Financiera dependen de la DG de…",o:["Administración y Logística","Seguridad","Recursos Humanos y Desarrollo","Seguridad Marítima y Portuaria"],e:"Administración y Logística."},
+{u:1,q:"¿Cuántas Prefecturas de Zona hay?",o:["Diez","Ocho","Tres","Doce"],e:"Alto Paraná, Paraná Superior y Paraguay, Alto Uruguay, Bajo Uruguay, Bajo Paraná, Delta, Río de la Plata, Mar Argentino Norte, Mar Argentino Sur y Lacustre y del Comahue."},
+{u:1,q:"¿Dónde tiene sede la Prefectura de Zona Mar Argentino Norte (PZMN)?",o:["Bahía Blanca","Mar del Plata","Río Gallegos","Viedma"],e:"PZMN: Bahía Blanca. PZMS: Río Gallegos."},
+{u:1,q:"¿Dónde tiene sede la Prefectura de Zona Alto Paraná (PZAP)?",o:["Posadas","Corrientes","Rosario","Paso de los Libres"],e:"PZAP: Posadas."},
+{u:1,q:"¿Dónde tiene sede la Prefectura de Zona Alto Uruguay (PZAU)?",o:["Paso de los Libres","Concepción del Uruguay","Posadas","Corrientes"],e:"PZAU: Paso de los Libres. PZBU (Bajo Uruguay): Concepción del Uruguay."},
+{u:1,q:"¿Dónde tiene sede la Prefectura de Zona Bajo Paraná (PZBP)?",o:["Rosario","Corrientes","Tigre","Paraná"],e:"PZBP: Rosario."},
+{u:1,q:"¿Dónde tiene sede la Prefectura de Zona Lacustre y del Comahue (PZLC)?",o:["Neuquén","Bariloche","Viedma","Río Gallegos"],e:"PZLC: Neuquén."},
+{u:1,q:"¿Dónde tiene sede la Prefectura de Zona Mar Argentino Sur (PZMS)?",o:["Río Gallegos","Ushuaia","Comodoro Rivadavia","Bahía Blanca"],e:"PZMS: Río Gallegos."},
+{u:1,q:"¿Cuáles son las tres Direcciones de Región y sus sedes?",o:["Norte en Corrientes, Centro en Rosario y Sur en Viedma","Norte en Posadas, Centro en Buenos Aires y Sur en Ushuaia","Norte en Rosario, Centro en Tigre y Sur en Bahía Blanca","Norte en Corrientes, Centro en Buenos Aires y Sur en Río Gallegos"],e:"Región Norte: Corrientes; Centro: Rosario; Sur: Viedma."},
+{u:1,q:"¿Qué Prefecturas de Zona agrupa la Dirección de Región Sur?",o:["Lacustre y del Comahue, Mar Argentino Sur y Mar Argentino Norte","Río de la Plata, Delta y Bajo Paraná","Alto Paraná, Alto Uruguay y Bajo Uruguay","Solo Mar Argentino Sur"],e:"Región Sur (Viedma): PZLC, PZMS y PZMN."},
+{u:1,q:"Ordená de mayor a menor los Oficiales Superiores:",o:["Prefecto General, Prefecto Mayor, Prefecto Principal","Prefecto Mayor, Prefecto General, Prefecto Principal","Prefecto Principal, Prefecto Mayor, Prefecto General","Prefecto General, Prefecto Principal, Prefecto Mayor"],e:"PG > PM > PP."},
+{u:1,q:"¿Qué grados son Oficiales Jefes?",o:["Prefecto y Subprefecto","Prefecto Principal y Prefecto","Oficial Principal y Subprefecto","Prefecto Mayor y Prefecto Principal"],e:"Oficiales Jefes: Prefecto (PR) y Subprefecto (SP)."},
+{u:1,q:"¿Qué grados son Oficiales Subalternos?",o:["Oficial Principal, Oficial Auxiliar y Oficial Ayudante","Subprefecto, Oficial Principal y Oficial Auxiliar","Ayudante Mayor, Ayudante Principal y Cabo Primero","Oficial Auxiliar, Oficial Ayudante y Cadete"],e:"OP, OX y OA."},
+{u:1,q:"¿Qué sigla corresponde a Oficial Auxiliar?",o:["OX","OA","AX","OAU"],e:"OP Oficial Principal, OX Oficial Auxiliar, OA Oficial Ayudante."},
+{u:1,q:"¿Cuál es el grado más alto del Personal Subalterno?",o:["Ayudante Mayor","Ayudante Principal","Cabo Primero","Ayudante de Primera"],e:"Ayudante Mayor, Ayudante Principal, Ayudante de 1.ª, 2.ª y 3.ª, Cabo Primero, Cabo Segundo y Marinero."},
+{u:1,q:"¿Qué grado sigue inmediatamente por debajo de Ayudante de Tercera?",o:["Cabo Primero","Cabo Segundo","Ayudante de Segunda","Marinero"],e:"…Ayudante de Tercera, Cabo Primero, Cabo Segundo, Marinero."},
+{u:1,q:"¿Cuáles son los cuerpos del Personal Superior?",o:["General, Profesional y Complementario","General, Técnico y Auxiliar","Operativo, Administrativo y Profesional","Ejecutivo, Profesional y de Reserva"],e:"Art. 21: Cuerpo General, Profesional y Complementario."},
+{u:1,q:"Según el art. 18, la superioridad se ordena por…",o:["Cargo, jerarquía, precedencia y antigüedad","Edad, grado y destino","Cuerpo, escalafón y especialidad","Calificación y antigüedad únicamente"],e:"Superioridad por cargo, por jerarquía, por precedencia y por antigüedad."},
+// ===== UNIDAD 2
+{u:2,q:"¿Qué es el GDE?",o:["El sistema integrado de caratulación, numeración, seguimiento y registración de actuaciones y expedientes del Sector Público Nacional","Un módulo para liquidar haberes","El sistema de mensajería interna de la PNA","Un registro de legajos en papel"],e:"Es el único sistema de tramitación electrónica del Sector Público Nacional."},
+{u:2,q:"¿Qué decreto hizo obligatorio el GDE y dio de baja al COMDOC?",o:["Decreto 561/2016","Decreto 434/2016","Decreto 1131/2016","Decreto 457/2025"],e:"El 434/16 aprobó el Plan de Modernización; el 561/16 hizo obligatorio el GDE; el 1131/16 regula digitalización y archivo."},
+{u:2,q:"¿Qué ley regula la firma digital?",o:["Ley 25.506","Ley 18.398","Ley 20.094","Ley 26.025"],e:"Ley 25.506 (2001): validez del documento digital y de las firmas electrónica y digital."},
+{u:2,q:"¿Qué módulo del GDE sirve para generar, registrar y archivar todos los documentos oficiales?",o:["GEDO","CCOO","EE","LUE"],e:"GEDO: Generador Electrónico de Documentos Oficiales."},
+{u:2,q:"¿Qué módulo permite caratular, vincular documentos, dar pases y consultar?",o:["EE · Expediente Electrónico","GEDO","LUE","EU"],e:"El Expediente Electrónico."},
+{u:2,q:"¿Qué contiene el LUE?",o:["La documentación de las personas que prestan servicio en la APN","Los expedientes judiciales","Las comunicaciones oficiales","Los mensajes MOI"],e:"Legajo Único Electrónico. Desde el 01/04/2017 los legajos en papel pasaron al LUE."},
+{u:2,q:"¿Dónde te registrás para obtener usuario en el GDE?",o:["En la Coordinación Administrativa de tu destino","En la Dirección de Informática del Ministerio","En la DPER","Por el SIME"],e:"La Coordinación Administrativa asigna usuario y contraseña (Usuario/Destino#PNA)."},
+{u:2,q:"La clave del GDE es…",o:["Personal, secreta e intransferible","Compartida por la oficina","Personal pero se puede delegar al ayudante","Asignada por el jefe y conocida por él"],e:"Lo hecho y firmado con tu clave se presume hecho por vos."},
+{u:2,q:"En el número DI-2023-937-APN-MADR#PNA, ¿qué indica “DI”?",o:["El tipo de documento (Disposición)","La dirección emisora","El destinatario","El número de expediente"],e:"DI tipo · 2023 año · 937 correlativo · APN ecosistema · MADR destino del firmante · #PNA organismo."},
+{u:2,q:"En el número DI-2023-937-APN-MADR#PNA, ¿qué indica “MADR”?",o:["El destino o repartición del firmante","El tipo de documento","El ecosistema","El año"],e:"MADR es el destino del firmante."},
+{u:2,q:"¿Qué diferencia a la firma digital de la electrónica?",o:["La digital es verificable por terceros, identifica al firmante y detecta alteraciones; la electrónica no cumple todos esos requisitos","La electrónica tiene más validez que la digital","La digital solo sirve en papel","No hay diferencia legal"],e:"Si se desconoce una firma electrónica, quien la invoca debe probar su validez."},
+{u:2,q:"Los documentos firmados digitalmente en GEDO…",o:["Tienen la misma validez jurídica y probatoria que los firmados de puño y letra","No tienen validez judicial","Valen solo dentro de la PNA","Requieren además firma hológrafa"],e:"Misma validez jurídica y probatoria."},
+{u:2,q:"En GDE, los “archivos embebidos” equivalen en papel a…",o:["Los agregados","El objeto","El membrete","Las referencias"],e:"Embebidos = agregados."},
+{u:2,q:"En el GDE, el “objeto” del documento en papel se carga en el campo…",o:["Referencia","Destinatario","Archivo de trabajo","Membrete"],e:"Objeto → Referencia."},
+{u:2,q:"¿Qué documento GDE equivale al Oficio del Reglamento de Correspondencia?",o:["Nota (NO)","Memorando (MEMO)","Disposición (DI)","Acta (ACT)"],e:"El oficio pasa a ser una Nota."},
+{u:2,q:"¿Cómo se sube un croquis o imagen de un parte a un expediente electrónico?",o:["Con un Informe Gráfico (IFGRA)","Con un MEMO","Con un ACTFC","No se puede subir"],e:"El IFGRA sirve para contenidos que no son solo texto."},
+{u:2,q:"El Oficio de Estilo se usa para…",o:["Cursar documentación a organismos ajenos a la PNA y elevar actuaciones a juzgados y fiscalías","Comunicaciones internas del superior al subordinado","Informar novedades en primera persona","Registrar un secuestro"],e:"En GDE puede hacerse como nota externa (destinatario no digital), IF o IFGRA."},
+{u:2,q:"¿Cuál es la diferencia entre ACT y ACTFC?",o:["ACT lleva una firma; ACTFC, dos o más","ACT es externa; ACTFC, interna","ACTFC es solo para secuestros","No hay diferencia"],e:"FC = firma conjunta."},
+{u:2,q:"¿Cuál NO es un tipo de acta del Reglamento de Correspondencia?",o:["De elevación","De notificación","De hallazgo","De inspección ocular"],e:"Tipos: notificación, procedimiento, hallazgo, inspección ocular y secuestro."},
+{u:2,q:"El memorando es…",o:["Una comunicación interna del superior al subordinado, individual o colectiva","Un mandato del Poder Ejecutivo","Un documento para organismos externos","Un parte de novedades"],e:"Sirve, por ejemplo, para impartir directivas o hacer un llamado de atención."},
+{u:2,q:"El Parte de Novedades se redacta…",o:["En primera persona","En tercera persona","Solo en lenguaje cifrado","Con fórmulas de cortesía"],e:"Informa al superior inmediato un suceso, en primera persona."},
+{u:2,q:"Ordená la jerarquía normativa de mayor a menor:",o:["Constitución, leyes, decretos, resoluciones, disposiciones","Leyes, Constitución, resoluciones, decretos, disposiciones","Constitución, decretos, leyes, disposiciones, resoluciones","Constitución, leyes, resoluciones, decretos, disposiciones"],e:"Constitución > Leyes > Decretos (PEN) > Resoluciones (Ministerios) > Disposiciones (PNA)."},
+{u:2,q:"¿Quién dicta una disposición?",o:["El PNN, el SPNN, directores o jefes de organismo, dependencia o unidad","Solo el Poder Ejecutivo","Los ministros","El Congreso"],e:"Para cumplirse dentro de su jurisdicción."},
+{u:2,q:"¿Quién dicta una resolución?",o:["Ministros, secretarios u otras autoridades facultadas","Los jefes de dependencia de la PNA","El Poder Ejecutivo exclusivamente","El Oficial de Guardia"],e:"Puede tener vigencia dentro o fuera de su jurisdicción."},
+{u:2,q:"¿Cuál NO es un tipo de decreto?",o:["Ministerial","Reglamentario","Autónomo","De Necesidad y Urgencia"],e:"Tipos: reglamentario, autónomo, delegado y DNU."},
+{u:2,q:"En una disposición, los considerandos comienzan con la palabra…",o:["Que","Visto","Dispone","Artículo"],e:"Estructura: antecedentes, considerandos (“Que…”), autoridad (DISPONE) y parte dispositiva."},
+{u:2,q:"¿Qué tipografía establece el Reglamento de Correspondencia?",o:["Times New Roman 12","Arial 11","Calibri 12","Courier 10"],e:"Times New Roman 12, regular."},
+{u:2,q:"Hacia un subalterno, la palabra clave es…",o:["COMUNICO","ELEVO","SOLICITO","REMITO"],e:"Hacia un superior: REMITO, INFORMO, REQUIERO, ELEVO, SOLICITO."},
+{u:2,q:"¿Cuál de estas palabras NO se usa al escribirle a un superior?",o:["COMUNICO","ELEVO","INFORMO","REQUIERO"],e:"COMUNICO se usa hacia subalternos."},
+{u:2,q:"¿Por qué sistema se transmite el MOI?",o:["SIME, exclusivamente por la red de la Institución","GDE, módulo CCOO","Correo electrónico personal","WhatsApp institucional"],e:"Sistema Interno de Mensajería Electrónica."},
+{u:2,q:"¿Cuál es la precedencia máxima de un mensaje administrativo?",o:["P · Papa (Prioridad)","R · Romeo (Rutina)","Z · Zulu (Flash)","O · Oscar"],e:"Zulu es operativo inmediato y Oscar son operaciones en curso; Papa es la máxima administrativa."},
+{u:2,q:"Ordená las precedencias de mayor a menor:",o:["Zulu, Oscar, Papa, Romeo","Papa, Zulu, Oscar, Romeo","Romeo, Papa, Oscar, Zulu","Oscar, Zulu, Romeo, Papa"],e:"Z Flash > O > P Prioridad > R Rutina."},
+{u:2,q:"¿Qué significa “271630 JUN 16” como GFH?",o:["16:30 del 27 de junio de 2016","27:16 del 30 de junio de 2016","27 de junio a las 16:16, día 30","16 de junio a las 27:30"],e:"Día (27), hora (16), minutos (30), más mes y año."},
+{u:2,q:"En el MOI, ¿qué indica FM?",o:["El promotor: la jefatura bajo cuya autoridad sale el mensaje","El destinatario ejecutivo","El destinatario informativo","El fin del mensaje"],e:"TO ejecutivo, INFO informativo, XMT exceptuado, BT separador."},
+{u:2,q:"En el MOI, ¿qué indica TO?",o:["El destinatario ejecutivo, que debe actuar","El promotor","El exceptuado","El destinatario informativo"],e:"TO = ejecutivo."},
+{u:2,q:"En el MOI, ¿qué indica XMT?",o:["El destinatario exceptuado de un indicativo colectivo","El texto cifrado","La hora de transmisión","El acuse de recibo"],e:"Exceptuado: no debe ejecutar lo ordenado."},
+{u:2,q:"¿Para qué sirve “BT” en el MOI?",o:["Separa el encabezado del texto y marca su inicio y fin","Indica precedencia","Identifica al promotor","Es la firma del oficial"],e:"BT es el separador."},
+{u:2,q:"¿Cómo se escribe una coma en el texto de un MOI?",o:["CMM","PD","CLN","QUES"],e:"CMM coma, PD punto, CLN dos puntos, PAREN paréntesis, QUES pregunta."},
+{u:2,q:"En el MOI, “PD” significa…",o:["Punto","Por disposición","Promotor designado","Pregunta"],e:"PD = punto."},
+{u:2,q:"¿Cómo se escribe el mes de agosto en un MOI?",o:["AUG","AGO","AGT","AU"],e:"Meses con tres letras en inglés: JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC."},
+{u:2,q:"¿Cómo se debe escribir la medianoche en un MOI?",o:["2359 o 0001, evitando 2400","2400","0000 siempre","12 AM"],e:"Se evita 2400."},
+{u:2,q:"¿Qué significa NOTAL en un MOI?",o:["Que la referencia no es para todas las autoridades destinatarias","Que el mensaje es urgente","Que se anula el mensaje","Que es una nota externa"],e:"NOTAL: no para todas las autoridades destinatarias."},
+{u:2,q:"¿Cómo se responde un acuse de conformidad?",o:["“Su 121314 acuso conformidad”","“Recibido, gracias”","“Mi 121314 conforme”","Con un nuevo MOI de precedencia Zulu"],e:"Solo cuando el texto lo pide; no es una respuesta."},
+{u:2,q:"¿Quién puede anular un MOI?",o:["Solo el promotor","Cualquier destinatario","El operador del SIME","El destinatario informativo"],e:"Cambio chico: corrección; cambio grande: anular y emitir uno nuevo."},
+{u:2,q:"¿Cuál NO es una responsabilidad del promotor de un MOI?",o:["Cargar el mensaje en el SIME como operador","Decidir si el mensaje es necesario","Fijar clasificación y precedencia","Hacerlo firmar por el oficial autorizante"],e:"La carga la hace el operador del SIME."},
+{u:2,q:"¿Qué publicación es el CAPNA?",o:["R.I. PNA 3-066, Catálogo de Códigos Administrativos","R.I. PNA 3-002, Reglamento de Correspondencia","R.I. PNA 3-029, Reglamento de Uniformes","R.I. PNA 6-044, RAP"],e:"Define cuatrigramas de destinos y bigramas."},
+{u:2,q:"¿Cómo se deletrea DPER con código fonético?",o:["Delta Papa Echo Romeo","Dante Pedro Eva Roma","Delta Pedro Echo Rosa","David Papa Eco Romeo"],e:"Alfabeto fonético internacional."},
+// ===== UNIDAD 3
+{u:3,q:"¿Cuál es el fin del régimen disciplinario?",o:["Afianzar y mantener la disciplina en base a los principios de autoridad y responsabilidad","Castigar al personal","Recaudar multas","Reemplazar al proceso penal"],e:"RP Título 05."},
+{u:3,q:"¿A quiénes alcanza el régimen disciplinario?",o:["Al personal en actividad, retirado y a los alumnos","Solo al personal en actividad","Solo al Personal Subalterno","Solo a los alumnos"],e:"Arts. 050101 y 050102."},
+{u:3,q:"¿Qué es una falta disciplinaria?",o:["Toda violación a los deberes policiales establecidos expresamente, siempre que no configure delito","Todo delito cometido por personal policial","Cualquier error administrativo","Solo las faltas al superior"],e:"Art. 050201."},
+{u:3,q:"Si un subalterno cumple una orden del servicio, ¿quién responde?",o:["Solo el superior que la dio, salvo que el subalterno se aparte, se exceda o la orden contraríe abiertamente leyes o reglamentos","Siempre el subalterno","Ambos por igual","Nadie"],e:"Art. 050202."},
+{u:3,q:"Las faltas que se sancionan con arresto de más de 30 días o baja se comprueban por…",o:["Sumario","Información","Apercibimiento","Acta de hallazgo"],e:"Sumario: más de 30 días o baja (y faltas graves). Información: más de 10 días."},
+{u:3,q:"Las faltas que merecen arresto de más de 10 días (y no más de 30) se comprueban por…",o:["Información","Sumario","No requieren trámite","Junta Médica"],e:"Arts. 050203 y 050205."},
+{u:3,q:"¿Cuántos grupos de faltas establece el art. 050206?",o:["Cuatro","Dos","Tres","Seis"],e:"a) corrección personal y ética; b) respeto al superior; c) ejercicio del mando; d) régimen del servicio."},
+{u:3,q:"Vender artículos comerciales entre camaradas es una falta…",o:["De corrección personal y ética profesional","Al respeto debido al superior","En el ejercicio del mando","Al régimen del servicio"],e:"Grupo a)."},
+{u:3,q:"No saludar a un superior es una falta…",o:["Al respeto debido al superior","De corrección personal","En el ejercicio del mando","Al régimen del servicio"],e:"Grupo b)."},
+{u:3,q:"No reprimir las faltas de los subalternos es una falta…",o:["En el ejercicio del mando","Al respeto debido al superior","De corrección personal","Al régimen del servicio"],e:"Grupo c)."},
+{u:3,q:"Llegar tarde al servicio es una falta…",o:["Al régimen del servicio","De corrección personal","En el ejercicio del mando","Al respeto debido al superior"],e:"Grupo d)."},
+{u:3,q:"¿A partir de cuántas horas de ausencia injustificada hay abandono del servicio?",o:["Más de 72 horas","Más de 24 horas","Más de 48 horas","Más de 7 días"],e:"Un subordinado que falta 4 días sin avisar incurre en abandono."},
+{u:3,q:"¿Dentro de qué plazo se debe comunicar un cambio de domicilio?",o:["48 horas","24 horas","72 horas","10 días"],e:"No avisarlo en 48 h es falta al régimen del servicio."},
+{u:3,q:"Ordená las sanciones de la más leve a la más grave:",o:["Apercibimiento, arresto, baja por cesantía, baja por exoneración","Arresto, apercibimiento, exoneración, cesantía","Apercibimiento, cesantía, arresto, exoneración","Arresto, cesantía, apercibimiento, exoneración"],e:"Art. 050301."},
+{u:3,q:"¿Cuál es la duración del arresto?",o:["De 24 horas a 180 días","De 1 a 30 días","De 12 horas a 90 días","De 48 horas a 1 año"],e:"Sin incomunicación ni calabozo; puede cumplirse sin perjuicio del servicio."},
+{u:3,q:"Si la orden de arresto a un oficial es verbal, debe ratificarse por escrito dentro de…",o:["12 horas","24 horas","48 horas","72 horas"],e:"Art. 050304."},
+{u:3,q:"¿Qué diferencia a la cesantía de la exoneración?",o:["Con la cesantía se conserva el haber de retiro; la exoneración inhabilita para toda la Administración Pública","La cesantía es más grave","La exoneración es temporal","No hay diferencia"],e:"Ambas separan de la PNA y hacen perder el estado policial."},
+{u:3,q:"¿Qué sanción se aplica al personal retirado?",o:["Pérdida del uso del título del grado y del uniforme","Arresto domiciliario","Exoneración automática","Apercibimiento solamente"],e:"Art. 050308."},
+{u:3,q:"¿Cuál NO extingue la acción disciplinaria?",o:["El traslado de destino","La muerte del imputado","La amnistía","La prescripción"],e:"También la extingue la sanción ya cumplida por el mismo hecho."},
+{u:3,q:"¿A los cuántos años prescriben las faltas graves o de sumario?",o:["2 años","1 año","5 años","6 meses"],e:"Las demás, al año."},
+{u:3,q:"¿Cuál es el arresto máximo que puede imponer un Oficial Principal a un oficial subalterno?",o:["3 días","5 días","8 días","2 días"],e:"OP: 3 días a oficiales subalternos y 5 al personal subalterno."},
+{u:3,q:"¿Cuál es el arresto máximo que puede imponer un Oficial Principal al personal subalterno?",o:["5 días","3 días","10 días","4 días"],e:"Tabla 050401."},
+{u:3,q:"¿Cuántos días de arresto puede imponer un Prefecto General al personal subalterno?",o:["30 días","20 días","15 días","60 días"],e:"PG: 3 · 6 · 15 · 30."},
+{u:3,q:"Ejercer las facultades disciplinarias es…",o:["Una obligación","Optativo según criterio del jefe","Solo una recomendación","Exclusivo del PNN"],e:"Art. 050402; no hacerlo es falta en el ejercicio del mando."},
+{u:3,q:"¿Cuáles son los cinco tipos de licencia?",o:["Local o franco diario, ordinaria, anual, extraordinaria y especial","Anual, médica, familiar, de estudio y deportiva","Ordinaria, extraordinaria, sin goce, con goce y especial","Anual, semestral, mensual, diaria y especial"],e:"RP 060102."},
+{u:3,q:"El franco diario limita al personal a un radio de…",o:["3 horas de viaje en transporte público","50 km","1 hora de viaje","La misma ciudad del destino"],e:"Art. 060103."},
+{u:3,q:"¿Cuántos días de licencia anual corresponden con hasta 15 años de antigüedad?",o:["30 días","40 días","20 días","15 días"],e:"Con más de 15 años: 40 días."},
+{u:3,q:"¿Qué antigüedad mínima se necesita para la licencia anual?",o:["Más de 6 meses","1 año","3 meses","2 años"],e:"Art. 060105."},
+{u:3,q:"Para usar la licencia anual en el exterior, ¿quién la autoriza y cómo se pide?",o:["El Director del Personal, por MOI","El titular del destino, por nota","El PNN, por expediente","No hace falta autorización"],e:"RP 060122 · RAP 10512."},
+{u:3,q:"La licencia extraordinaria la concede…",o:["El Prefecto Nacional Naval, con 20 años o más de servicio, una sola vez en la carrera","El titular del destino, cada 5 años","El Director del Personal, a pedido","La Junta Médica"],e:"Menos de 6 meses continuos; no con retiro obligatorio."},
+{u:3,q:"Por enfermedad fuera del servicio, ¿cuántos días por año concede el titular del destino?",o:["60 días","30 días","90 días","1 año"],e:"Después interviene la Junta; de 60 días a 2 años concede el Director del Personal."},
+{u:3,q:"Por enfermedad en o por acto del servicio, de 1 a 3 años, ¿quién concede la licencia?",o:["El Prefecto Nacional Naval","El titular del destino","El Director del Personal","La Junta Médica"],e:"Hasta 1 año: Director del Personal."},
+{u:3,q:"¿Cuántos días de licencia corresponden por matrimonio?",o:["15 días corridos","10 días hábiles","20 días","7 días"],e:"Motivos de familia (RAP 10510)."},
+{u:3,q:"Por fallecimiento del cónyuge o de un familiar de primer grado corresponden…",o:["6 días","2 días","1 día","10 días"],e:"2.º grado: 2 días; 3.º y 4.º: 1 día."},
+{u:3,q:"¿Cuántos días corresponden por nacimiento de un hijo?",o:["2 días","6 días","15 días","1 día"],e:"Motivos de familia."},
+{u:3,q:"¿Cuánto dura la licencia por gravidez?",o:["90 días (45 antes y 45 después del parto)","60 días después del parto","120 días","45 días en total"],e:"Parto múltiple: 15 semanas."},
+{u:3,q:"¿Cuál NO es una opción de la licencia por lactancia?",o:["Un día libre por semana","Dos descansos de media hora","Una hora menos de jornada","Una hora durante el día"],e:"Hasta los 6 meses del nacimiento."},
+{u:3,q:"¿Cuántos días corresponden por donación de sangre?",o:["1 día","2 días","Medio día","3 días"],e:"Licencia especial."},
+{u:3,q:"Licencia por estudios: ¿cuántos días laborables por año como máximo?",o:["28, en fracciones de hasta 7 por mes","15, de corrido","30, en cualquier momento","10, solo para exámenes"],e:"RP, licencias especiales."},
+{u:3,q:"Licencia por asuntos personales para el Personal Superior: ¿hasta cuánto?",o:["Hasta 2 años","Hasta 6 meses","Hasta 1 año","Hasta 30 días"],e:"Personal Subalterno: hasta 6 meses."},
+{u:3,q:"¿Dónde se registran las licencias antes de usarlas?",o:["En el Libro de Licencias, y se cargan en el SUPERHA","Solo en el GDE","En el Libro de Guardia","No se registran"],e:"Y cada mes se informan a la DPER."},
+{u:3,q:"¿Qué es la Foja de Conceptos?",o:["Un juicio detallado y de conjunto, por escrito, sobre las aptitudes del calificado","Un registro de sanciones","El legajo de licencias","Una planilla de asistencia"],e:"RAP 20201. Se carga en el SUPERHA y es reservada."},
+{u:3,q:"En la Foja de Conceptos, ¿quién es la última instancia de calificación?",o:["El titular del destino","El superior directo","La DPER","El PNN"],e:"Siempre que se pueda, al menos 2 instancias."},
+{u:3,q:"¿Qué calificaciones de la Foja de Conceptos exigen justificación?",o:["Poco Satisfactorio (PS) y Excepcional (EX)","Todas","Solo las menores a 7","Ninguna"],e:"EX: 9,01–10; PS: 2–3,99."},
+{u:3,q:"El personal subalterno observado se califica al…",o:["30 de junio, o cuando se indique","31 de diciembre","1 de marzo","Fin de cada trimestre"],e:"La foja siguiente consigna su grado de reacción."},
+{u:3,q:"¿Qué publicación es el Reglamento General del Servicio?",o:["R.I. PNA 3-062","R.I. PNA 3-029","R.I. PNA 3-002","R.I. PNA 6-008"],e:"De 1979."},
+{u:3,q:"En el código Q, QSL significa…",o:["Acuso recibo","Posición","Cese de transmisión","Repita"],e:"QTH posición; QRT cese de transmisión."},
+{u:3,q:"¿Qué publicación es el Reglamento de Uniformes?",o:["R.I. PNA 3-029","R.I. PNA 3-062","R.I. PNA 3-066","R.I. PNA 3-074"],e:"Edición 2006."},
+{u:3,q:"¿Qué uniforme se usa en ceremonias oficiales como el 25 de mayo o el Día de la PNA?",o:["N.º 1 Azul","N.º 4 Arena completo","N.º 2 Blanco","N.º 5 Servicio diario"],e:"N.º 1: social de invierno."},
+{u:3,q:"Si el Prefecto Nacional Naval visita (anunciado) tu destino, ¿qué uniforme corresponde?",o:["N.º 4 Arena completo","N.º 1 Azul","N.º 8 Operaciones","N.º 6 Servicio diario de verano"],e:"El N.º 4 es para inspecciones y visitas anunciadas de PNN, SPNN, directores y PPZZ."},
+{u:3,q:"¿Cuál es el uniforme N.º 7?",o:["Patagónico","Gimnasia","Tropical","Operaciones policiales"],e:"De Gral. Lavalle a Comodoro Rivadavia en invierno; al sur, todo el año."},
+{u:3,q:"¿Qué uniforme admite pantalón corto y náuticos en servicios de playa y a bordo?",o:["N.º 6 Servicio diario de verano","N.º 3 Tropical","N.º 2 Blanco","N.º 9 Gimnasia"],e:"N.º 6."},
+{u:3,q:"Los uniformes N.º 2 (Blanco) y N.º 3 (Tropical) son…",o:["Sociales de verano","De servicio diario","De operaciones","De invierno"],e:"El N.º 3 es para zonas de altas temperaturas."},
+{u:3,q:"¿Cuántos uniformes establece el reglamento?",o:["Nueve","Seis","Siete","Doce"],e:"Del N.º 1 Azul al N.º 9 Gimnasia."},
+{u:3,q:"¿Qué escalafón pertenece al Cuerpo Profesional?",o:["Científico Tecnológico","Intendencia","Técnica General","General"],e:"Profesional: Jurídico, Sanidad, Ingeniería, Técnica Naval y Científico Tecnológico."},
+{u:3,q:"El escalafón Intendencia pertenece al Cuerpo…",o:["General","Profesional","Complementario","Subalterno"],e:"Cuerpo General: General e Intendencia."},
+{u:3,q:"¿Qué artículo del Reglamento de Uniformes trata los distintivos de grado?",o:["2.016","1.005","1.024","3.039"],e:"Distintivos: 2.015 a 2.023 (grado 2.016, grupo jerárquico 2.017, cuerpo y escalafón 2.018)."},
+{u:3,q:"Las condecoraciones son…",o:["Reconocimientos que otorga la PNA a su personal","Distintivos de otras fuerzas","Insignias de grado","Prendas especiales"],e:"Art. 1.024. Las distinciones premian un mérito; los distintivos especiales los otorgan otras fuerzas."},
+{u:3,q:"¿De qué color es el uniforme quirúrgico de Sanidad?",o:["Naranja","Blanco","Verde","Azul"],e:"Consultorio: guardapolvo y ambo blanco; quirúrgico: naranja."}
+];
+const UCOL={1:'#1D4E89',2:'#0F766E',3:'#9A4A08'};
+const N=30;let Q=[],ans=[],cur=0,instant=true;
+const $=id=>document.getElementById(id);
+$('poolN').textContent=BANK.length+' preguntas';
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function build(pool){
+  // reparto proporcional por unidad, luego mezcla
+  const by={1:[],2:[],3:[]};shuffle(pool).forEach(q=>by[q.u].push(q));
+  const tot=pool.length,take=Math.min(N,tot);let pick=[];
+  [1,2,3].forEach(u=>{pick=pick.concat(by[u].slice(0,Math.round(take*by[u].length/tot)));});
+  const rest=shuffle(pool.filter(q=>!pick.includes(q)));while(pick.length<take&&rest.length)pick.push(rest.pop());
+  pick=shuffle(pick).slice(0,take);
+  return pick.map(q=>{const opts=shuffle(q.o.map((t,i)=>({t,ok:i===0})));return {...q,opts};});
+}
+function start(pool){
+  instant=$('instant').checked;Q=build(pool);ans=new Array(Q.length).fill(null);cur=0;
+  $('start').classList.add('hidden');$('result').classList.add('hidden');$('quiz').classList.remove('hidden');render();window.scrollTo(0,0);
+}
+function render(){
+  const q=Q[cur];$('count').textContent=`Pregunta ${cur+1} de ${Q.length}`;
+  $('prog').style.width=((cur+1)/Q.length*100)+'%';
+  const t=$('utag');t.textContent='Unidad '+q.u;t.style.background=UCOL[q.u];
+  $('qtext').textContent=q.q;
+  const box=$('opts');box.innerHTML='';
+  const locked=instant&&ans[cur]!==null;
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='opt';b.type='button';
+    b.innerHTML='<b>'+'ABCD'[i]+'</b><span></span>';b.querySelector('span').textContent=o.t;
+    if(ans[cur]===i)b.classList.add('sel');
+    if(locked){if(o.ok)b.classList.add('ok');else if(ans[cur]===i)b.classList.add('bad');}
+    b.onclick=()=>{if(instant&&ans[cur]!==null)return;ans[cur]=i;render();};
+    box.appendChild(b);
+  });
+  const ex=$('exp');
+  if(locked){const ok=q.opts[ans[cur]].ok;ex.className='exp '+(ok?'ok':'bad');ex.innerHTML='<b>'+(ok?'¡Correcto!':'Incorrecto.')+'</b> ';const s=document.createElement('span');s.textContent=(ok?'':'La correcta es: '+q.opts.find(o=>o.ok).t+'. ')+q.e;ex.appendChild(s);}
+  else ex.className='exp hidden';
+  $('prev').disabled=cur===0;
+  $('next').textContent=cur===Q.length-1?'Terminar':'Siguiente';
+  $('next').disabled=ans[cur]===null;
+}
+$('prev').onclick=()=>{if(cur>0){cur--;render();}};
+$('next').onclick=()=>{if(ans[cur]===null)return;if(cur<Q.length-1){cur++;render();window.scrollTo(0,0);}else finish();};
+function finish(){
+  $('quiz').classList.add('hidden');$('result').classList.remove('hidden');window.scrollTo(0,0);
+  let ok=0;const per={1:[0,0],2:[0,0],3:[0,0]};
+  Q.forEach((q,i)=>{const c=q.opts[ans[i]].ok;if(c)ok++;per[q.u][1]++;if(c)per[q.u][0]++;});
+  const pct=Math.round(ok/Q.length*100);
+  $('score').textContent=ok+' / '+Q.length;
+  $('verdict').textContent=pct+'% · '+(pct>=90?'Excelente':pct>=70?'Aprobado':pct>=60?'Justo, repasá lo que fallaste':'A repasar');
+  $('units').innerHTML='';
+  [1,2,3].forEach(u=>{if(!per[u][1])return;const d=document.createElement('div');d.className='unit';d.style.background=UCOL[u];d.innerHTML='Unidad '+u+'<div>'+per[u][0]+' / '+per[u][1]+'</div>';$('units').appendChild(d);});
+  const rv=$('review');rv.innerHTML='';
+  Q.forEach((q,i)=>{const c=q.opts[ans[i]].ok;const d=document.createElement('div');d.className='rev '+(c?'ok':'bad');
+    const p1=document.createElement('p');p1.innerHTML='<b>'+(i+1)+'.</b> ';p1.appendChild(document.createTextNode(q.q));d.appendChild(p1);
+    const p2=document.createElement('p');p2.textContent=(c?'✓ ':'✗ Tu respuesta: '+q.opts[ans[i]].t+' · Correcta: ')+q.opts.find(o=>o.ok).t;p2.style.color=c?'#15803D':'#B42318';d.appendChild(p2);
+    const p3=document.createElement('p');p3.className='muted';p3.textContent=q.e;d.appendChild(p3);rv.appendChild(d);});
+  $('onlyBad').style.display=ok===Q.length?'none':'';
+}
+$('go').onclick=()=>start(BANK);
+$('again').onclick=()=>start(BANK);
+$('onlyBad').onclick=()=>{const bad=Q.filter((q,i)=>!q.opts[ans[i]].ok).map(q=>BANK.find(b=>b.q===q.q));start(bad);};
+</script>
+</body>
+</html>
